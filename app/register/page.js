@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -15,29 +19,44 @@ export default function RegisterPage() {
   async function handleRegister(event) {
     event.preventDefault();
 
-    setLoading(true);
-    setMessage("");
-    setError("");
+    if (loading) return;
 
-    if (!name.trim() || !email.trim() || !password) {
-      setError("Please complete all fields.");
-      setLoading(false);
+    setError("");
+    setMessage("");
+
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanName) {
+      setError("Please enter your full name.");
+      return;
+    }
+
+    if (!isValidEmail(cleanEmail)) {
+      setError("Please enter a valid email address.");
       return;
     }
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters.");
-      setLoading(false);
       return;
     }
 
+    setLoading(true);
+
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: cleanEmail,
         password,
       });
 
       if (signUpError) {
+        if (signUpError.message.toLowerCase().includes("rate")) {
+          throw new Error(
+            "Too many registration attempts. Please wait and try again later."
+          );
+        }
+
         throw signUpError;
       }
 
@@ -49,8 +68,8 @@ export default function RegisterPage() {
         .from("profiles")
         .insert({
           id: data.user.id,
-          full_name: name.trim(),
-          email: email.trim(),
+          full_name: cleanName,
+          email: cleanEmail,
         });
 
       if (profileError) {
@@ -124,7 +143,11 @@ export default function RegisterPage() {
 
           {message && <p className="form-success">{message}</p>}
 
-          <button type="submit" disabled={loading} className="auth-button">
+          <button
+            type="submit"
+            disabled={loading}
+            className="auth-button"
+          >
             {loading ? "CREATING ACCOUNT..." : "CREATE WAR ACCOUNT"}
           </button>
         </form>
@@ -136,4 +159,4 @@ export default function RegisterPage() {
       </section>
     </main>
   );
-}
+          }
