@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 export default function VotePage() {
-  const [battle, setBattle] = useState(null);
   const [user, setUser] = useState(null);
-  const [selectedSide, setSelectedSide] = useState("");
-  const [existingVote, setExistingVote] = useState(null);
+  const [battle, setBattle] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  const [selectedSide, setSelectedSide] = useState("");
 
   useEffect(() => {
     loadVotePage();
@@ -50,68 +52,76 @@ export default function VotePage() {
       }
 
       if (!activeBattle) {
-        setError("There is currently no active WAR battle.");
+        setError(
+          "There is currently no active WAR battle."
+        );
         return;
       }
 
       setBattle(activeBattle);
-
-      const { data: vote, error: voteError } = await supabase
-        .from("stage1_votes")
-        .select("id, side, created_at")
-        .eq("user_id", currentUser.id)
-        .eq("battle_id", activeBattle.id)
-        .maybeSingle();
-
-      if (voteError) {
-        throw voteError;
-      }
-
-      if (vote) {
-        setExistingVote(vote);
-      }
     } catch (err) {
-      setError(err.message || "Unable to load the voting page.");
+      setError(
+        err.message || "Unable to load the voting page."
+      );
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleSideSelection(side) {
-    if (voting || existingVote) return;
+  async function castStage1Vote(side) {
+    if (voting || !user || !battle) return;
 
     setVoting(true);
     setError("");
-    setSelectedSide(side);
+    setMessage("");
 
     try {
-      const { error: insertError } = await supabase
+      /*
+       * Record the Stage 1 vote.
+       *
+       * The database has a UNIQUE constraint on:
+       * user_id + battle_id
+       *
+       * This prevents the same user from voting twice
+       * in the same battle.
+       */
+
+      const { error: voteError } = await supabase
         .from("stage1_votes")
         .insert({
           user_id: user.id,
           battle_id: battle.id,
-          side,
+          side: side,
         });
 
-      if (insertError) {
-        if (insertError.code === "23505") {
-          setError("You have already voted in Stage 1.");
+      if (voteError) {
+        if (voteError.code === "23505") {
+          setError(
+            "You have already voted in Stage 1."
+          );
+
           setVoting(false);
           return;
         }
 
-        throw insertError;
+        throw voteError;
       }
 
+      setMessage("Stage 1 vote recorded.");
+
       /*
-       * Stage 1 is now recorded.
-       * The selected side is passed to candidature
-       * so Stage 2 only shows that side.
+       * After Stage 1, send the voter to the
+       * candidature page for the side they selected.
        */
+
       window.location.href =
         `/candidature?side=${encodeURIComponent(side)}`;
     } catch (err) {
-      setError(err.message || "Your vote could not be recorded.");
+      setError(
+        err.message ||
+          "Your Stage 1 vote could not be recorded."
+      );
+
       setVoting(false);
     }
   }
@@ -130,52 +140,24 @@ export default function VotePage() {
     return (
       <main className="vote-page">
         <section className="vote-container">
-          <a href="/dashboard" className="back-link">
+
+          <a
+            href="/dashboard"
+            className="back-link"
+          >
             ← DASHBOARD
           </a>
 
-          <p className="eyebrow">STAGE 1</p>
+          <p className="eyebrow">
+            WHICH ARE YOU IN?
+          </p>
 
-          <h1>VOTING UNAVAILABLE</h1>
+          <h1>WAR.</h1>
 
           <p className="vote-message error-message">
             {error}
           </p>
-        </section>
-      </main>
-    );
-  }
 
-  if (existingVote) {
-    return (
-      <main className="vote-page">
-        <section className="vote-container">
-          <a href="/dashboard" className="back-link">
-            ← DASHBOARD
-          </a>
-
-          <p className="eyebrow">STAGE 1 COMPLETE</p>
-
-          <h1>YOU HAVE VOTED.</h1>
-
-          <section className="already-voted">
-            <p className="eyebrow">YOUR SIDE</p>
-
-            <h2>{existingVote.side}</h2>
-
-            <p>
-              Your Stage 1 vote has already been recorded.
-            </p>
-
-            <a
-              href={`/candidature?side=${encodeURIComponent(
-                existingVote.side
-              )}`}
-              className="vote-button"
-            >
-              CONTINUE TO CANDIDATURE →
-            </a>
-          </section>
         </section>
       </main>
     );
@@ -184,67 +166,121 @@ export default function VotePage() {
   return (
     <main className="vote-page">
       <section className="vote-container">
-        <a href="/dashboard" className="back-link">
+
+        <a
+          href="/dashboard"
+          className="back-link"
+        >
           ← DASHBOARD
         </a>
 
-        <p className="eyebrow">STAGE 1</p>
+        <header className="vote-header">
 
-        <h1>
-          {battle?.name || "WHICH ARE YOU IN?"}
-        </h1>
-
-        {battle?.description && (
-          <p className="vote-description">
-            {battle.description}
+          <p className="eyebrow">
+            {battle?.name || "WAR"}
           </p>
-        )}
 
-        <p className="instruction">
-          CHOOSE YOUR SIDE.
-        </p>
+          <h1>
+            WHICH ARE
+            <br />
+            YOU IN?
+          </h1>
 
-        <div className="sides-grid">
+          {battle?.description && (
+            <p className="vote-description">
+              {battle.description}
+            </p>
+          )}
+
+        </header>
+
+        <div className="side-selection">
 
           <button
             type="button"
-            className={`side-choice wantam-choice ${
-              selectedSide === "WANTAM" ? "selected" : ""
+            className={`side-card ${
+              selectedSide === "WANTAM"
+                ? "selected"
+                : ""
             }`}
-            onClick={() => handleSideSelection("WANTAM")}
             disabled={voting}
+            onClick={() => {
+              setSelectedSide("WANTAM");
+              castStage1Vote("WANTAM");
+            }}
           >
-            <span className="side-label">SIDE ONE</span>
 
-            <strong>WANTAM</strong>
-
-            <span>
-              {voting && selectedSide === "WANTAM"
-                ? "RECORDING VOTE..."
-                : "CHOOSE WANTAM →"}
+            <span className="side-number">
+              01
             </span>
+
+            <div>
+              <span className="side-label">
+                SIDE
+              </span>
+
+              <h2>WANTAM</h2>
+
+              <p>
+                WHO ARE YOU IN?
+              </p>
+            </div>
+
+            <span className="side-arrow">
+              →
+            </span>
+
           </button>
 
           <button
             type="button"
-            className={`side-choice tutam-choice ${
-              selectedSide === "TUTAM" ? "selected" : ""
+            className={`side-card ${
+              selectedSide === "TUTAM"
+                ? "selected"
+                : ""
             }`}
-            onClick={() => handleSideSelection("TUTAM")}
             disabled={voting}
+            onClick={() => {
+              setSelectedSide("TUTAM");
+              castStage1Vote("TUTAM");
+            }}
           >
-            <span className="side-label">SIDE TWO</span>
 
-            <strong>TUTAM</strong>
-
-            <span>
-              {voting && selectedSide === "TUTAM"
-                ? "RECORDING VOTE..."
-                : "CHOOSE TUTAM →"}
+            <span className="side-number">
+              02
             </span>
+
+            <div>
+              <span className="side-label">
+                SIDE
+              </span>
+
+              <h2>TUTAM</h2>
+
+              <p>
+                WHO ARE YOU IN?
+              </p>
+            </div>
+
+            <span className="side-arrow">
+              →
+            </span>
+
           </button>
 
         </div>
+
+        {voting && (
+          <p className="vote-message">
+            RECORDING YOUR VOTE...
+          </p>
+        )}
+
+        {message && (
+          <p className="vote-message">
+            {message}
+          </p>
+        )}
 
         {error && (
           <p className="vote-message error-message">
@@ -252,7 +288,11 @@ export default function VotePage() {
           </p>
         )}
 
+        <p className="vote-footer">
+          YOUR STAGE 1 VOTE CAN ONLY BE CAST ONCE.
+        </p>
+
       </section>
     </main>
   );
-}
+              }
