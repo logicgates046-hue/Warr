@@ -5,8 +5,12 @@ import { supabase } from "../../lib/supabase";
 
 export default function ResultsPage() {
   const [battle, setBattle] = useState(null);
-  const [wantamVotes, setWantamVotes] = useState(0);
-  const [tutamVotes, setTutamVotes] = useState(0);
+
+  const [stage1Results, setStage1Results] = useState([]);
+  const [stage2Results, setStage2Results] = useState([]);
+
+  const [candidates, setCandidates] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -19,12 +23,13 @@ export default function ResultsPage() {
     setError("");
 
     try {
-      const { data: activeBattle, error: battleError } = await supabase
-        .from("battles")
-        .select("id, name, description, status")
-        .eq("status", "active")
-        .limit(1)
-        .maybeSingle();
+      const { data: activeBattle, error: battleError } =
+        await supabase
+          .from("battles")
+          .select("id, name, description, status")
+          .eq("status", "active")
+          .limit(1)
+          .maybeSingle();
 
       if (battleError) {
         throw battleError;
@@ -37,48 +42,86 @@ export default function ResultsPage() {
 
       setBattle(activeBattle);
 
-      const { data: results, error: resultsError } = await supabase.rpc(
-        "get_stage1_results"
-      );
+      /*
+       * =========================
+       * STAGE 1 RESULTS
+       * =========================
+       */
 
-      if (resultsError) {
-        throw resultsError;
+      const { data: stage1Data, error: stage1Error } =
+        await supabase.rpc("get_stage1_results", {
+          p_battle_id: activeBattle.id,
+        });
+
+      if (stage1Error) {
+        throw stage1Error;
       }
 
-      let wantam = 0;
-      let tutam = 0;
+      setStage1Results(stage1Data || []);
 
-      (results || []).forEach((result) => {
-        if (result.side === "WANTAM") {
-          wantam = Number(result.vote_count);
-        }
+      /*
+       * =========================
+       * STAGE 2 RESULTS
+       * =========================
+       */
 
-        if (result.side === "TUTAM") {
-          tutam = Number(result.vote_count);
-        }
-      });
+      const { data: stage2Data, error: stage2Error } =
+        await supabase.rpc("get_stage2_results", {
+          p_battle_id: activeBattle.id,
+        });
 
-      setWantamVotes(wantam);
-      setTutamVotes(tutam);
+      if (stage2Error) {
+        throw stage2Error;
+      }
+
+      setStage2Results(stage2Data || []);
+
+      /*
+       * =========================
+       * CANDIDATES
+       * =========================
+       */
+
+      const { data: candidateData, error: candidateError } =
+        await supabase
+          .from("candidates")
+          .select(
+            "id, name, role, side, image_url"
+          )
+          .eq("battle_id", activeBattle.id);
+
+      if (candidateError) {
+        throw candidateError;
+      }
+
+      setCandidates(candidateData || []);
     } catch (err) {
-      setError(err.message || "Unable to load results.");
+      setError(
+        err.message || "Unable to load election results."
+      );
     } finally {
       setLoading(false);
     }
   }
 
-  const totalVotes = wantamVotes + tutamVotes;
+  function getCandidate(candidateId) {
+    return candidates.find(
+      (candidate) => candidate.id === candidateId
+    );
+  }
 
-  const wantamPercentage =
-    totalVotes > 0 ? (wantamVotes / totalVotes) * 100 : 0;
+  function getCandidateName(candidateId) {
+    return getCandidate(candidateId)?.name || "Unknown";
+  }
 
-  const tutamPercentage =
-    totalVotes > 0 ? (tutamVotes / totalVotes) * 100 : 0;
+  function getCandidateImage(candidateId) {
+    return getCandidate(candidateId)?.image_url || "";
+  }
 
   if (loading) {
     return (
-      <main className="vote-page">
-        <section className="vote-container">
+      <main className="results-page">
+        <section className="results-container">
           <p>LOADING RESULTS...</p>
         </section>
       </main>
@@ -87,97 +130,275 @@ export default function ResultsPage() {
 
   if (error) {
     return (
-      <main className="vote-page">
-        <section className="vote-container">
-          <a href="/" className="back-link">
-            ← WAR
+      <main className="results-page">
+        <section className="results-container">
+
+          <a href="/dashboard" className="back-link">
+            ← DASHBOARD
           </a>
 
-          <p className="eyebrow">RESULTS</p>
+          <p className="eyebrow">WAR RESULTS</p>
 
-          <h1>RESULTS UNAVAILABLE</h1>
+          <h1>UNAVAILABLE</h1>
 
-          <p className="vote-message error-message">{error}</p>
+          <p className="results-error">
+            {error}
+          </p>
+
         </section>
       </main>
     );
   }
 
   return (
-    <main className="vote-page">
-      <section className="vote-container results-container">
-        <a href="/" className="back-link">
-          ← WAR
+    <main className="results-page">
+      <section className="results-container">
+
+        <a href="/dashboard" className="back-link">
+          ← DASHBOARD
         </a>
 
-        <p className="eyebrow">WAR RESULTS</p>
+        <header className="results-header">
+          <p className="eyebrow">WAR RESULTS</p>
 
-        <h1>{battle?.name || "WHICH ARE YOU IN?"}</h1>
+          <h1>
+            {battle?.name || "RESULTS"}
+          </h1>
 
-        {battle?.description && (
-          <p className="vote-description">{battle.description}</p>
-        )}
+          {battle?.description && (
+            <p className="results-description">
+              {battle.description}
+            </p>
+          )}
+        </header>
 
-        <div className="total-votes">
-          <span>TOTAL VOTES CAST</span>
+        {/* =========================
+            STAGE 1
+            ========================= */}
 
-          <strong>{totalVotes.toLocaleString()}</strong>
-        </div>
+        <section className="results-section">
 
-        <section className="result-card wantam-result">
-          <div className="result-header">
+          <div className="results-section-heading">
+            <span>01</span>
+
             <div>
-              <span className="result-side-label">SIDE ONE</span>
-              <h2>WANTAM</h2>
+              <p className="eyebrow">STAGE 1</p>
+
+              <h2>WHICH ARE YOU IN?</h2>
             </div>
-
-            <strong className="result-percentage">
-              {wantamPercentage.toFixed(1)}%
-            </strong>
           </div>
 
-          <div className="result-bar">
-            <div
-              className="result-fill wantam-fill"
-              style={{ width: `${wantamPercentage}%` }}
-            />
-          </div>
+          {stage1Results.length === 0 ? (
+            <p className="empty-results">
+              No Stage 1 votes have been recorded yet.
+            </p>
+          ) : (
+            <div className="results-list">
 
-          <p className="vote-count">
-            {wantamVotes.toLocaleString()} votes
-          </p>
+              {stage1Results.map((result) => (
+                <article
+                  key={result.side}
+                  className="result-card"
+                >
+
+                  <div className="result-top">
+                    <div>
+                      <span className="result-label">
+                        SIDE
+                      </span>
+
+                      <h3>{result.side}</h3>
+                    </div>
+
+                    <div className="result-number">
+                      <strong>
+                        {Number(result.total_votes).toLocaleString()}
+                      </strong>
+
+                      <span>VOTES</span>
+                    </div>
+                  </div>
+
+                  <div className="result-percentage">
+                    <strong>
+                      {Number(result.percentage).toFixed(2)}%
+                    </strong>
+                  </div>
+
+                  <div className="result-bar">
+                    <div
+                      className="result-bar-fill"
+                      style={{
+                        width: `${Number(
+                          result.percentage
+                        )}%`,
+                      }}
+                    />
+                  </div>
+
+                </article>
+              ))}
+
+            </div>
+          )}
         </section>
 
-        <section className="result-card tutam-result">
-          <div className="result-header">
+        {/* =========================
+            STAGE 2
+            ========================= */}
+
+        <section className="results-section">
+
+          <div className="results-section-heading">
+            <span>02</span>
+
             <div>
-              <span className="result-side-label">SIDE TWO</span>
-              <h2>TUTAM</h2>
+              <p className="eyebrow">STAGE 2</p>
+
+              <h2>TICKET RESULTS</h2>
             </div>
-
-            <strong className="result-percentage">
-              {tutamPercentage.toFixed(1)}%
-            </strong>
           </div>
 
-          <div className="result-bar">
-            <div
-              className="result-fill tutam-fill"
-              style={{ width: `${tutamPercentage}%` }}
-            />
-          </div>
+          {stage2Results.length === 0 ? (
+            <p className="empty-results">
+              No Stage 2 votes have been recorded yet.
+            </p>
+          ) : (
+            <div className="ticket-results-list">
 
-          <p className="vote-count">
-            {tutamVotes.toLocaleString()} votes
-          </p>
+              {stage2Results.map((result, index) => {
+
+                const president =
+                  getCandidate(result.president_id);
+
+                const deputy =
+                  getCandidate(result.deputy_id);
+
+                return (
+                  <article
+                    key={result.ticket_id}
+                    className="ticket-result-card"
+                  >
+
+                    <div className="ticket-result-header">
+
+                      <span className="ticket-result-number">
+                        TICKET{" "}
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+
+                      <span className="ticket-result-side">
+                        {result.side}
+                      </span>
+
+                    </div>
+
+                    <div className="ticket-result-people">
+
+                      <div className="result-person">
+
+                        {getCandidateImage(
+                          result.president_id
+                        ) ? (
+                          <img
+                            src={getCandidateImage(
+                              result.president_id
+                            )}
+                            alt={getCandidateName(
+                              result.president_id
+                            )}
+                          />
+                        ) : (
+                          <div className="result-person-placeholder">
+                            P
+                          </div>
+                        )}
+
+                        <div>
+                          <span>PRESIDENT</span>
+
+                          <strong>
+                            {president?.name ||
+                              "Unknown"}
+                          </strong>
+                        </div>
+
+                      </div>
+
+                      <div className="result-person">
+
+                        {getCandidateImage(
+                          result.deputy_id
+                        ) ? (
+                          <img
+                            src={getCandidateImage(
+                              result.deputy_id
+                            )}
+                            alt={getCandidateName(
+                              result.deputy_id
+                            )}
+                          />
+                        ) : (
+                          <div className="result-person-placeholder">
+                            D
+                          </div>
+                        )}
+
+                        <div>
+                          <span>DEPUTY</span>
+
+                          <strong>
+                            {deputy?.name ||
+                              "Unknown"}
+                          </strong>
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                    <div className="ticket-result-votes">
+
+                      <div>
+                        <strong>
+                          {Number(
+                            result.total_votes
+                          ).toLocaleString()}
+                        </strong>
+
+                        <span>VOTES</span>
+                      </div>
+
+                      <strong>
+                        {Number(
+                          result.percentage
+                        ).toFixed(2)}
+                        %
+                      </strong>
+
+                    </div>
+
+                    <div className="result-bar">
+                      <div
+                        className="result-bar-fill"
+                        style={{
+                          width: `${Number(
+                            result.percentage
+                          )}%`,
+                        }}
+                      />
+                    </div>
+
+                  </article>
+                );
+              })}
+
+            </div>
+          )}
+
         </section>
 
-        <div className="results-actions">
-          <a href="/vote" className="vote-button">
-            BACK TO VOTE
-          </a>
-        </div>
       </section>
     </main>
   );
-}
+                        }
