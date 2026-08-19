@@ -1,42 +1,40 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
-export default function CandidaturePage() {
+function CandidatureContent() {
   const searchParams = useSearchParams();
-  const selectedSide = searchParams.get("side");
+  const side = searchParams.get("side");
 
+  const [user, setUser] = useState(null);
   const [battle, setBattle] = useState(null);
   const [candidates, setCandidates] = useState([]);
-  const [tickets, setTickets] = useState([]);
-  const [user, setUser] = useState(null);
+
+  const [selectedCandidate, setSelectedCandidate] =
+    useState(null);
+
   const [loading, setLoading] = useState(true);
+  const [voting, setVoting] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     loadCandidature();
-  }, [selectedSide]);
+  }, []);
 
   async function loadCandidature() {
     setLoading(true);
     setError("");
 
     try {
-      if (selectedSide !== "WANTAM" && selectedSide !== "TUTAM") {
-        setError("No valid WAR side was selected.");
-        return;
-      }
-
       const {
         data: { user: currentUser },
         error: userError,
       } = await supabase.auth.getUser();
 
-      if (userError) {
-        throw userError;
-      }
+      if (userError) throw userError;
 
       if (!currentUser) {
         window.location.href = "/login";
@@ -53,246 +51,260 @@ export default function CandidaturePage() {
           .limit(1)
           .maybeSingle();
 
-      if (battleError) {
-        throw battleError;
-      }
+      if (battleError) throw battleError;
 
       if (!activeBattle) {
-        setError("There is currently no active WAR battle.");
+        setError(
+          "There is currently no active WAR battle."
+        );
         return;
       }
 
       setBattle(activeBattle);
 
-      const { data: candidateData, error: candidateError } =
-        await supabase
-          .from("candidates")
-          .select(
-            "id, battle_id, name, role, side, image_url, created_at"
-          )
-          .eq("battle_id", activeBattle.id)
-          .eq("side", selectedSide)
-          .order("created_at", { ascending: true });
+      let query = supabase
+        .from("candidates")
+        .select(
+          "id, battle_id, name, role, side, image_url"
+        )
+        .eq("battle_id", activeBattle.id);
 
-      if (candidateError) {
-        throw candidateError;
+      if (side) {
+        query = query.eq("side", side);
       }
+
+      const {
+        data: candidateData,
+        error: candidateError,
+      } = await query.order("created_at", {
+        ascending: true,
+      });
+
+      if (candidateError) throw candidateError;
 
       setCandidates(candidateData || []);
-
-      const { data: ticketData, error: ticketError } =
-        await supabase
-          .from("tickets")
-          .select(
-            "id, battle_id, side, president_id, deputy_id, created_at"
-          )
-          .eq("battle_id", activeBattle.id)
-          .eq("side", selectedSide)
-          .order("created_at", { ascending: true });
-
-      if (ticketError) {
-        throw ticketError;
-      }
-
-      setTickets(ticketData || []);
     } catch (err) {
       setError(
-        err.message || "Unable to load the candidature."
+        err.message ||
+          "Unable to load the candidature page."
       );
     } finally {
       setLoading(false);
     }
   }
 
-  function getCandidateName(candidateId) {
-    const candidate = candidates.find(
-      (item) => item.id === candidateId
-    );
-
-    return candidate?.name || "Candidate";
+  function selectCandidate(candidate) {
+    setSelectedCandidate(candidate);
+    setMessage("");
+    setError("");
   }
 
-  function getCandidateRole(candidateId) {
-    const candidate = candidates.find(
-      (item) => item.id === candidateId
-    );
+  async function continueToStage2() {
+    if (!selectedCandidate) {
+      setError(
+        "Please select a candidate before continuing."
+      );
+      return;
+    }
 
-    return candidate?.role || "";
-  }
+    /*
+     * Stage 1 has already determined the user's side.
+     * This page selects the candidature/ticket side.
+     *
+     * We now continue to Stage 2.
+     */
 
-  function handleTicketSelection(ticketId) {
     window.location.href =
-      `/stage2-vote?ticket=${encodeURIComponent(ticketId)}&side=${encodeURIComponent(
-        selectedSide
+      `/stage2-vote?side=${encodeURIComponent(
+        side || selectedCandidate.side
       )}`;
   }
 
   if (loading) {
     return (
-      <main className="vote-page">
-        <section className="vote-container">
+      <main className="candidature-page">
+        <section className="candidature-container">
           <p>LOADING CANDIDATURE...</p>
         </section>
       </main>
     );
   }
 
-  if (error) {
+  if (error && !battle) {
     return (
-      <main className="vote-page">
-        <section className="vote-container">
-          <a href="/dashboard" className="back-link">
+      <main className="candidature-page">
+        <section className="candidature-container">
+
+          <a
+            href="/dashboard"
+            className="back-link"
+          >
             ← DASHBOARD
           </a>
 
-          <p className="eyebrow">CANDIDATURE</p>
+          <p className="eyebrow">
+            CANDIDATURE
+          </p>
 
-          <h1>UNAVAILABLE</h1>
+          <h1>UNAVAILABLE.</h1>
 
-          <p className="vote-message error-message">
+          <p className="candidature-error">
             {error}
           </p>
+
         </section>
       </main>
     );
   }
 
   return (
-    <main className="vote-page">
-      <section className="vote-container candidature-container">
+    <main className="candidature-page">
+      <section className="candidature-container">
 
-        <a href="/dashboard" className="back-link">
-          ← DASHBOARD
+        <a
+          href="/vote"
+          className="back-link"
+        >
+          ← BACK TO STAGE 1
         </a>
 
-        <p className="eyebrow">STAGE 2</p>
+        <header className="candidature-header">
 
-        <h1>{selectedSide}</h1>
+          <p className="eyebrow">
+            {battle?.name || "WAR"}
+          </p>
 
-        {battle?.description && (
-          <p className="vote-description">
-            {battle.description}
+          <h1>
+            {side || "CANDIDATURE"}.
+          </h1>
+
+          <p className="candidature-description">
+            Select the candidature you want to proceed
+            with.
+          </p>
+
+        </header>
+
+        {candidates.length === 0 ? (
+          <div className="empty-candidates">
+            <p>
+              No candidates have been added for this
+              side yet.
+            </p>
+          </div>
+        ) : (
+          <div className="candidate-list">
+
+            {candidates.map((candidate) => (
+              <button
+                key={candidate.id}
+                type="button"
+                className={`candidate-card ${
+                  selectedCandidate?.id === candidate.id
+                    ? "selected"
+                    : ""
+                }`}
+                onClick={() =>
+                  selectCandidate(candidate)
+                }
+              >
+
+                {candidate.image_url ? (
+                  <img
+                    src={candidate.image_url}
+                    alt={candidate.name}
+                    className="candidate-image"
+                  />
+                ) : (
+                  <div className="candidate-image-placeholder">
+                    {candidate.name
+                      ?.charAt(0)
+                      ?.toUpperCase() || "?"}
+                  </div>
+                )}
+
+                <div className="candidate-information">
+
+                  <span>
+                    {candidate.role || "CANDIDATE"}
+                  </span>
+
+                  <h2>
+                    {candidate.name}
+                  </h2>
+
+                  <small>
+                    {candidate.side}
+                  </small>
+
+                </div>
+
+                <div className="candidate-select">
+                  {selectedCandidate?.id ===
+                  candidate.id
+                    ? "✓"
+                    : "→"}
+                </div>
+
+              </button>
+            ))}
+
+          </div>
+        )}
+
+        {error && (
+          <p className="candidature-error">
+            {error}
           </p>
         )}
 
-        <section className="candidate-side-section">
-          <div className="candidate-section-header">
-            <span>
-              {selectedSide === "WANTAM" ? "01" : "02"}
-            </span>
+        {message && (
+          <p className="candidature-message">
+            {message}
+          </p>
+        )}
 
-            <h2>CANDIDATURE</h2>
-          </div>
+        {selectedCandidate && (
+          <section className="candidature-continue">
 
-          {candidates.length === 0 ? (
-            <p className="empty-candidates">
-              No candidates have been added to this side yet.
+            <p>
+              SELECTED
             </p>
-          ) : (
-            <div className="candidate-grid">
-              {candidates.map((candidate) => (
-                <article
-                  key={candidate.id}
-                  className="candidate-card"
-                >
-                  {candidate.image_url ? (
-                    <img
-                      src={candidate.image_url}
-                      alt={candidate.name}
-                      className="candidate-image"
-                    />
-                  ) : (
-                    <div className="candidate-placeholder">
-                      {candidate.name
-                        ?.charAt(0)
-                        ?.toUpperCase() || "?"}
-                    </div>
-                  )}
 
-                  <div className="candidate-info">
-                    <span className="candidate-role">
-                      {candidate.role || "CANDIDATE"}
-                    </span>
+            <strong>
+              {selectedCandidate.name}
+            </strong>
 
-                    <h3>{candidate.name}</h3>
+            <button
+              type="button"
+              onClick={continueToStage2}
+              disabled={voting}
+            >
+              CONTINUE TO STAGE 2 →
+            </button>
 
-                    <span className="candidate-side">
-                      {candidate.side}
-                    </span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="candidate-side-section">
-
-          <div className="candidate-section-header">
-            <span>TICKETS</span>
-
-            <h2>CHOOSE</h2>
-          </div>
-
-          {tickets.length === 0 ? (
-            <p className="empty-candidates">
-              No tickets have been created for this side yet.
-            </p>
-          ) : (
-            <div className="ticket-grid">
-
-              {tickets.map((ticket, index) => (
-                <article
-                  key={ticket.id}
-                  className="ticket-card"
-                >
-                  <span className="ticket-number">
-                    TICKET {String(index + 1).padStart(2, "0")}
-                  </span>
-
-                  <div className="ticket-person">
-                    <span>PRESIDENT</span>
-
-                    <strong>
-                      {getCandidateName(ticket.president_id)}
-                    </strong>
-
-                    <small>
-                      {getCandidateRole(ticket.president_id)}
-                    </small>
-                  </div>
-
-                  <div className="ticket-divider" />
-
-                  <div className="ticket-person">
-                    <span>DEPUTY</span>
-
-                    <strong>
-                      {getCandidateName(ticket.deputy_id)}
-                    </strong>
-
-                    <small>
-                      {getCandidateRole(ticket.deputy_id)}
-                    </small>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="ticket-button"
-                    onClick={() =>
-                      handleTicketSelection(ticket.id)
-                    }
-                  >
-                    SELECT THIS TICKET →
-                  </button>
-                </article>
-              ))}
-
-            </div>
-          )}
-        </section>
+          </section>
+        )}
 
       </section>
     </main>
   );
 }
+
+function CandidatureFallback() {
+  return (
+    <main className="candidature-page">
+      <section className="candidature-container">
+        <p>LOADING CANDIDATURE...</p>
+      </section>
+    </main>
+  );
+}
+
+export default function CandidaturePage() {
+  return (
+    <Suspense fallback={<CandidatureFallback />}>
+      <CandidatureContent />
+    </Suspense>
+  );
+          }
