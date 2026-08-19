@@ -1198,3 +1198,133 @@ a {
     height: 70px;
   }
 }
+/* =========================
+   COMMUNITY
+   ========================= */
+
+.community-page {
+  min-height: 100vh;
+  padding: 40px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.community-container {
+  width: 100%;
+  max-width: 760px;
+  text-align: center;
+}
+
+.community-container h1 {
+  margin-top: 12px;
+  font-size: clamp(55px, 12vw, 110px);
+  line-height: 0.9;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+}
+
+.community-description {
+  max-width: 580px;
+  margin: 25px auto 0;
+  color: #888888;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.community-success {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  margin: 45px 0 25px;
+  padding: 30px;
+  text-align: left;
+  border: 1px solid #292929;
+  background: #111111;
+}
+
+.community-check {
+  width: 65px;
+  height: 65px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.community-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #777777;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+}
+
+.community-success h2 {
+  font-size: 35px;
+  font-weight: 900;
+}
+
+.community-success p {
+  margin-top: 8px;
+  color: #888888;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.community-button,
+.community-secondary-button {
+  display: block;
+  width: 100%;
+  padding: 18px 20px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-decoration: none;
+}
+
+.community-button {
+  background: #ffffff;
+  color: #000000;
+}
+
+.community-button:hover {
+  background: #dddddd;
+}
+
+.community-secondary-button {
+  margin-top: 12px;
+  border: 1px solid #292929;
+  color: #ffffff;
+}
+
+.community-secondary-button:hover {
+  background: #151515;
+}
+
+@media (max-width: 700px) {
+  .community-page {
+    padding: 25px 18px;
+  }
+
+  .community-success {
+    align-items: flex-start;
+    padding: 22px;
+  }
+
+  .community-check {
+    width: 52px;
+    height: 52px;
+    font-size: 22px;
+  }
+
+  .community-success h2 {
+    font-size: 28px;
+  }
+}
