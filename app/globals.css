@@ -170,43 +170,6 @@ a {
 }
 
 /* =========================
-   MOBILE
-   ========================= */
-
-@media (max-width: 700px) {
-  .home {
-    padding: 18px;
-    align-items: flex-start;
-    padding-top: 55px;
-  }
-
-  .hero h1 {
-    font-size: clamp(42px, 14vw, 64px);
-  }
-
-  .intro {
-    margin-bottom: 30px;
-  }
-
-  .battle {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .side {
-    min-height: 230px;
-    padding: 26px 20px;
-  }
-
-  .versus {
-    min-height: 35px;
-  }
-
-  .enter-button {
-    width: 100%;
-    margin-top: 28px;
-  }
-  /* =========================
    AUTHENTICATION
    ========================= */
 
@@ -340,7 +303,44 @@ a {
   text-decoration: underline;
 }
 
-@media (max-width: 520px) {
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 700px) {
+  .home {
+    padding: 18px;
+    align-items: flex-start;
+    padding-top: 55px;
+  }
+
+  .hero h1 {
+    font-size: clamp(42px, 14vw, 64px);
+  }
+
+  .intro {
+    margin-bottom: 30px;
+  }
+
+  .battle {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .side {
+    min-height: 230px;
+    padding: 26px 20px;
+  }
+
+  .versus {
+    min-height: 35px;
+  }
+
+  .enter-button {
+    width: 100%;
+    margin-top: 28px;
+  }
+
   .auth-page {
     align-items: flex-start;
     padding: 18px;
