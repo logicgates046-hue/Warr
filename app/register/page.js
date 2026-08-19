@@ -45,13 +45,19 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      // Create the authentication account
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
       });
 
       if (signUpError) {
-        if (signUpError.message.toLowerCase().includes("rate")) {
+        const errorMessage = signUpError.message.toLowerCase();
+
+        if (
+          errorMessage.includes("rate") ||
+          errorMessage.includes("too many")
+        ) {
           throw new Error(
             "Too many registration attempts. Please wait and try again later."
           );
@@ -64,27 +70,32 @@ export default function RegisterPage() {
         throw new Error("Registration could not be completed.");
       }
 
-      const { error: profileError } = await supabase
+      // Create the WAR profile.
+      // war_number is generated automatically by the database.
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .insert({
           id: data.user.id,
           full_name: cleanName,
-          email: cleanEmail,
-        });
+        })
+        .select("id, war_number, full_name")
+        .single();
 
       if (profileError) {
         throw profileError;
       }
 
       setMessage(
-        "Account created successfully. Check your email if confirmation is required."
+        `Account created successfully! Your WAR Number is ${profile.war_number}.`
       );
 
       setName("");
       setEmail("");
       setPassword("");
     } catch (err) {
-      setError(err.message || "Something went wrong during registration.");
+      setError(
+        err.message || "Something went wrong during registration."
+      );
     } finally {
       setLoading(false);
     }
