@@ -1012,3 +1012,86 @@ a {
     margin-top: 50px;
   }
 }
+/* =========================
+   STAGE 2 TICKETS
+   ========================= */
+
+.ticket-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.ticket-card {
+  padding: 28px;
+  border: 1px solid #292929;
+  background: #111111;
+}
+
+.ticket-number {
+  display: block;
+  margin-bottom: 30px;
+  color: #777777;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+}
+
+.ticket-person span {
+  display: block;
+  margin-bottom: 8px;
+  color: #777777;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.ticket-person strong {
+  display: block;
+  font-size: 28px;
+  line-height: 1.05;
+  font-weight: 900;
+}
+
+.ticket-person small {
+  display: block;
+  margin-top: 7px;
+  color: #888888;
+  font-size: 12px;
+}
+
+.ticket-divider {
+  height: 1px;
+  margin: 25px 0;
+  background: #292929;
+}
+
+.ticket-button {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 30px;
+  border: none;
+  background: #ffffff;
+  color: #0a0a0a;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.ticket-button:hover {
+  background: #dddddd;
+}
+
+@media (max-width: 700px) {
+  .ticket-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-card {
+    padding: 24px 20px;
+  }
+
+  .ticket-person strong {
+    font-size: 25px;
+  }
+}
