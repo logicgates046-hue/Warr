@@ -13,10 +13,14 @@ export default function LoginPage() {
   async function handleLogin(event) {
     event.preventDefault();
 
+    if (loading) return;
+
     setLoading(true);
     setError("");
 
-    if (!email.trim() || !password) {
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail || !password) {
       setError("Please enter your email and password.");
       setLoading(false);
       return;
@@ -25,7 +29,7 @@ export default function LoginPage() {
     try {
       const { error: loginError } =
         await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: cleanEmail,
           password,
         });
 
@@ -33,9 +37,9 @@ export default function LoginPage() {
         throw loginError;
       }
 
-      window.location.href = "/vote";
+      window.location.href = "/dashboard";
     } catch (err) {
-      setError(err.message || "Unable to log in.");
+      setError(err.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -53,7 +57,7 @@ export default function LoginPage() {
         <h1>WELCOME BACK</h1>
 
         <p className="auth-description">
-          Sign in to continue your WAR journey.
+          Enter your WAR account to continue.
         </p>
 
         <form onSubmit={handleLogin} className="auth-form">
@@ -83,10 +87,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
             className="auth-button"
+            disabled={loading}
           >
-            {loading ? "SIGNING IN..." : "LOGIN"}
+            {loading ? "LOGGING IN..." : "LOGIN"}
           </button>
         </form>
 
