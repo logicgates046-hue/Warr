@@ -37,22 +37,26 @@ export default function ResultsPage() {
 
       setBattle(activeBattle);
 
-      const { data: votes, error: votesError } = await supabase
-        .from("stage1_votes")
-        .select("side")
-        .eq("battle_id", activeBattle.id);
+      const { data: results, error: resultsError } = await supabase.rpc(
+        "get_stage1_results"
+      );
 
-      if (votesError) {
-        throw votesError;
+      if (resultsError) {
+        throw resultsError;
       }
 
-      const wantam = (votes || []).filter(
-        (vote) => vote.side === "WANTAM"
-      ).length;
+      let wantam = 0;
+      let tutam = 0;
 
-      const tutam = (votes || []).filter(
-        (vote) => vote.side === "TUTAM"
-      ).length;
+      (results || []).forEach((result) => {
+        if (result.side === "WANTAM") {
+          wantam = Number(result.vote_count);
+        }
+
+        if (result.side === "TUTAM") {
+          tutam = Number(result.vote_count);
+        }
+      });
 
       setWantamVotes(wantam);
       setTutamVotes(tutam);
@@ -116,6 +120,7 @@ export default function ResultsPage() {
 
         <div className="total-votes">
           <span>TOTAL VOTES CAST</span>
+
           <strong>{totalVotes.toLocaleString()}</strong>
         </div>
 
@@ -175,4 +180,4 @@ export default function ResultsPage() {
       </section>
     </main>
   );
-      }
+}
