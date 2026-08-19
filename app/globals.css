@@ -1750,3 +1750,188 @@ a {
     font-size: 21px;
   }
 }
+/* =========================
+   ADMIN BATTLES
+   ========================= */
+
+.admin-form-section {
+  margin-top: 65px;
+}
+
+.admin-section-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding-bottom: 18px;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #292929;
+}
+
+.admin-section-title span {
+  color: #666666;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-section-title h2 {
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.admin-form {
+  display: grid;
+  gap: 20px;
+  padding: 25px;
+  border: 1px solid #292929;
+  background: #111111;
+}
+
+.admin-form label {
+  display: grid;
+  gap: 9px;
+  color: #888888;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-form input,
+.admin-form textarea,
+.admin-form select {
+  width: 100%;
+  padding: 15px;
+  border: 1px solid #333333;
+  outline: none;
+  background: #0a0a0a;
+  color: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.admin-form textarea {
+  resize: vertical;
+}
+
+.admin-form input:focus,
+.admin-form textarea:focus,
+.admin-form select:focus {
+  border-color: #ffffff;
+}
+
+.admin-primary-button {
+  min-height: 52px;
+  padding: 0 20px;
+  border: none;
+  background: #ffffff;
+  color: #000000;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.admin-primary-button:hover {
+  background: #dddddd;
+}
+
+.admin-primary-button:disabled {
+  opacity: 0.5;
+}
+
+.admin-battle-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-battle-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  padding: 25px;
+  border: 1px solid #292929;
+  background: #111111;
+}
+
+.admin-battle-status {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 5px 8px;
+  border: 1px solid #333333;
+  color: #888888;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.admin-battle-card h3 {
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.admin-battle-card p {
+  max-width: 600px;
+  margin-top: 8px;
+  color: #777777;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.admin-battle-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.admin-battle-actions button {
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid #333333;
+  background: transparent;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.admin-battle-actions button:hover {
+  background: #202020;
+}
+
+.admin-success {
+  margin-top: 20px;
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.empty-admin {
+  padding: 25px;
+  border: 1px solid #292929;
+  color: #777777;
+}
+
+@media (max-width: 700px) {
+  .admin-form-section {
+    margin-top: 50px;
+  }
+
+  .admin-section-title h2 {
+    font-size: 24px;
+  }
+
+  .admin-battle-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-battle-actions {
+    width: 100%;
+  }
+
+  .admin-battle-actions button {
+    flex: 1;
+  }
+}
