@@ -9,6 +9,7 @@
   --flag-red: #bb0000;
   --flag-black: #000000;
   --flag-white: #ffffff;
+  --flag-green: #007a3d;
 }
 
 * {
@@ -74,13 +75,22 @@ button {
   font-weight: 900;
   letter-spacing: 2px;
   margin-bottom: 8px;
-  color: var(--flag-white);
-  text-shadow:
-    1px 1px 0 var(--flag-red),
-    2px 2px 0 var(--flag-red),
-    3px 3px 0 var(--flag-black),
-    4px 4px 0 var(--flag-black),
-    5px 5px 8px rgba(0, 0, 0, 0.5);
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--flag-black) 0px,
+    var(--flag-black) 8px,
+    var(--flag-red) 8px,
+    var(--flag-red) 16px,
+    var(--flag-white) 16px,
+    var(--flag-white) 24px,
+    var(--flag-green) 24px,
+    var(--flag-green) 32px
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.6)) drop-shadow(4px 4px 6px rgba(0,0,0,0.5));
 }
 
 .hero h1 {
