@@ -324,3 +324,77 @@ button {
   font-weight: 800;
   letter-spacing: 1px;
 }
+.tickets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.ticket-card {
+  background-color: var(--bg-card);
+  border-radius: 16px;
+  padding: 18px;
+  border: 2px solid transparent;
+  box-shadow:
+    0 6px 0 rgba(0, 0, 0, 0.35),
+    0 10px 20px rgba(0, 0, 0, 0.4);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ticket-card:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.35),
+    0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.ticket-card.wantam {
+  border-color: var(--wantam-color);
+}
+
+.ticket-card.tutam {
+  border-color: var(--tutam-color);
+}
+
+.ticket-card.dimmed {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.ticket-people {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ticket-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ticket-person img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #2a2a2a;
+}
+
+.ticket-role {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.ticket-name {
+  display: block;
+  font-family: var(--font-heading), sans-serif;
+  font-size: 16px;
+  margin-top: 2px;
+}
