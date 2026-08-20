@@ -34,3 +34,23 @@ button {
   cursor: pointer;
   border: none;
 }
+.ticker-wrap {
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--flag-red);
+  padding: 8px 0;
+}
+
+.ticker {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-muted);
+  animation: scroll-left 25s linear infinite;
+}
+
+@keyframes scroll-left {
+  from { transform: translateX(100%); }
+  to { transform: translateX(-100%); }
+}
