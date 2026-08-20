@@ -107,19 +107,36 @@ button {
 .battle {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 14px;
   margin-bottom: 28px;
-  border-radius: 16px;
-  overflow: hidden;
 }
 
 .side {
   padding: 28px 24px;
   text-align: left;
+  border-radius: 18px;
+  box-shadow:
+    0 6px 0 rgba(0, 0, 0, 0.35),
+    0 10px 20px rgba(0, 0, 0, 0.4);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  cursor: pointer;
 }
 
-.side.wantam { background-color: var(--wantam-color); }
-.side.tutam { background-color: var(--tutam-color); }
+.side:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.35),
+    0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.side.wantam {
+  background: linear-gradient(180deg, #00953f 0%, var(--wantam-color) 100%);
+}
+
+.side.tutam {
+  background: linear-gradient(180deg, #ffe033 0%, var(--tutam-color) 100%);
+}
+
 .side.tutam h2, .side.tutam p, .side.tutam .side-label { color: #111; }
 
 .side-label {
@@ -143,8 +160,7 @@ button {
 
 .versus {
   text-align: center;
-  padding: 10px 0;
-  background-color: var(--bg-base);
+  padding: 4px 0;
   color: var(--text-muted);
   font-weight: 700;
   font-size: 13px;
