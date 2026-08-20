@@ -295,3 +295,32 @@ button {
 .auth-form input[type="date"] {
   color-scheme: dark;
 }
+.loading-text {
+  color: var(--text-muted);
+  text-align: center;
+  padding-top: 60px;
+}
+
+.battle-title {
+  font-family: var(--font-heading), sans-serif;
+  font-size: 36px;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  margin-bottom: 16px;
+}
+
+.side.dimmed {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.voted-badge {
+  display: inline-block;
+  margin-top: 12px;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
