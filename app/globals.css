@@ -34,6 +34,7 @@ button {
   cursor: pointer;
   border: none;
 }
+
 .ticker-wrap {
   width: 100%;
   overflow: hidden;
@@ -54,6 +55,7 @@ button {
   from { transform: translateX(100%); }
   to { transform: translateX(-100%); }
 }
+
 .home {
   min-height: 100vh;
   display: flex;
@@ -68,11 +70,17 @@ button {
 }
 
 .eyebrow {
-  font-size: 13px;
-  letter-spacing: 4px;
-  color: var(--flag-red);
-  font-weight: 700;
-  margin-bottom: 12px;
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  color: var(--flag-white);
+  text-shadow:
+    1px 1px 0 var(--flag-red),
+    2px 2px 0 var(--flag-red),
+    3px 3px 0 var(--flag-black),
+    4px 4px 0 var(--flag-black),
+    5px 5px 8px rgba(0, 0, 0, 0.5);
 }
 
 .hero h1 {
