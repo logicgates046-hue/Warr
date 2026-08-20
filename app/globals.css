@@ -398,3 +398,19 @@ button {
   font-size: 16px;
   margin-top: 2px;
 }
+.ranking-ticket {
+  margin-bottom: 14px;
+}
+
+.ranking-ticket .side-label {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--text-muted);
+}
+
+.vote-count-reveal {
+  margin-top: 12px;
+  font-family: var(--font-heading), sans-serif;
+  font-size: 14px;
+  color: var(--text-muted);
+}
