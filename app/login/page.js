@@ -1,104 +1,85 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
+  const router = useRouter();
 
-  async function handleLogin(event) {
-    event.preventDefault();
-
-    if (loading) return;
-
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError('');
     setLoading(true);
-    setError("");
 
-    const cleanEmail = email.trim().toLowerCase();
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (!cleanEmail || !password) {
-      setError("Please enter your email and password.");
+    if (signInError) {
+      setError(signInError.message);
       setLoading(false);
       return;
     }
 
-    try {
-      const { error: loginError } =
-        await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password,
-        });
+    // Check if profile is complete (has a county set)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('county')
+      .eq('id', data.user.id)
+      .single();
 
-      if (loginError) {
-        throw loginError;
-      }
+    setLoading(false);
 
-      window.location.href = "/dashboard";
-    } catch (err) {
-      setError(err.message || "Login failed. Please try again.");
-    } finally {
-      setLoading(false);
+    if (!profile?.county) {
+      router.push('/complete-profile');
+    } else {
+      router.push('/battle');
     }
-  }
+  };
 
   return (
     <main className="auth-page">
-      <section className="auth-card">
-        <a href="/" className="back-link">
-          ← WAR
-        </a>
+      <a href="/" className="back-link">← KE-WAR</a>
 
-        <p className="eyebrow">WAR</p>
+      <p className="eyebrow small">KE-WAR</p>
+      <h1 className="auth-title">WELCOME BACK</h1>
+      <p className="auth-subtitle">Enter your KE-WAR account to continue.</p>
 
-        <h1>WELCOME BACK</h1>
+      <form onSubmit={handleLogin} className="auth-form">
+        <label>EMAIL</label>
+        <input
+          type="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
 
-        <p className="auth-description">
-          Enter your WAR account to continue.
-        </p>
+        <label>PASSWORD</label>
+        <input
+          type="password"
+          placeholder="Your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
 
-        <form onSubmit={handleLogin} className="auth-form">
-          <label htmlFor="email">EMAIL</label>
+        {error && <p className="auth-error">{error}</p>}
 
-          <input
-            id="email"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            autoComplete="email"
-          />
+        <button type="submit" className="auth-button" disabled={loading}>
+          {loading ? 'LOGGING IN...' : 'LOGIN'}
+        </button>
+      </form>
 
-          <label htmlFor="password">PASSWORD</label>
-
-          <input
-            id="password"
-            type="password"
-            placeholder="Your password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete="current-password"
-          />
-
-          {error && <p className="form-error">{error}</p>}
-
-          <button
-            type="submit"
-            className="auth-button"
-            disabled={loading}
-          >
-            {loading ? "LOGGING IN..." : "LOGIN"}
-          </button>
-        </form>
-
-        <p className="auth-footer">
-          Don't have a WAR account?{" "}
-          <a href="/register">REGISTER</a>
-        </p>
-      </section>
+      <p className="login-text">
+        Don't have a KE-WAR account? <a href="/register">REGISTER</a>
+      </p>
     </main>
   );
-}
+          }
