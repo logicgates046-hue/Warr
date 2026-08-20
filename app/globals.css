@@ -54,3 +54,112 @@ button {
   from { transform: translateX(100%); }
   to { transform: translateX(-100%); }
 }
+.home {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 32px 20px 60px;
+}
+
+.hero {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+.eyebrow {
+  font-size: 13px;
+  letter-spacing: 4px;
+  color: var(--flag-red);
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.hero h1 {
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  margin-bottom: 16px;
+}
+
+.intro {
+  color: var(--text-muted);
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.description {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.battle {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 28px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.side {
+  padding: 28px 24px;
+  text-align: left;
+}
+
+.side.wantam { background-color: var(--wantam-color); }
+.side.tutam { background-color: var(--tutam-color); }
+.side.tutam h2, .side.tutam p, .side.tutam .side-label { color: #111; }
+
+.side-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  opacity: 0.85;
+}
+
+.side h2 {
+  font-size: 28px;
+  font-weight: 900;
+  margin: 6px 0 10px;
+}
+
+.side p {
+  font-size: 14px;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.versus {
+  text-align: center;
+  padding: 10px 0;
+  background-color: var(--bg-base);
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.enter-button {
+  display: block;
+  background-color: var(--flag-white);
+  color: #111;
+  font-weight: 800;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 15px;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+}
+
+.login-text {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.login-text a {
+  color: var(--flag-red);
+  font-weight: 700;
+}
