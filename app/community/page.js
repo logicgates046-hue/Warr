@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
-export default function CommunityPage() {
+function CommunityContent() {
   const searchParams = useSearchParams();
   const side = searchParams.get("side");
 
@@ -14,38 +14,39 @@ export default function CommunityPage() {
 
   useEffect(() => {
     loadCommunity();
-  }, [side]);
+  }, []);
 
   async function loadCommunity() {
     setLoading(true);
     setError("");
 
     try {
-      if (side !== "WANTAM" && side !== "TUTAM") {
-        setError("No valid WAR community was selected.");
-        return;
-      }
-
       const {
         data: { user },
         error: userError,
       } = await supabase.auth.getUser();
 
-      if (userError) {
-        throw userError;
-      }
+      if (userError) throw userError;
 
       if (!user) {
         window.location.href = "/login";
         return;
       }
 
+      if (!side) {
+        setError(
+          "No community side was specified."
+        );
+        return;
+      }
+
       const { data, error: communityError } =
         await supabase
-          .from("community_settings")
-          .select("id, side, whatsapp_url, updated_at")
+          .from("community-settings")
+          .select(
+            "id, side, whatsapp_url, updated_at"
+          )
           .eq("side", side)
-          .limit(1)
           .maybeSingle();
 
       if (communityError) {
@@ -54,14 +55,7 @@ export default function CommunityPage() {
 
       if (!data) {
         setError(
-          `The ${side} community has not been configured yet.`
-        );
-        return;
-      }
-
-      if (!data.whatsapp_url) {
-        setError(
-          `The ${side} community link has not been configured yet.`
+          `No community has been configured for ${side}.`
         );
         return;
       }
@@ -69,7 +63,8 @@ export default function CommunityPage() {
       setCommunity(data);
     } catch (err) {
       setError(
-        err.message || "Unable to load the community."
+        err.message ||
+          "Unable to load the community."
       );
     } finally {
       setLoading(false);
@@ -91,17 +86,19 @@ export default function CommunityPage() {
       <main className="community-page">
         <section className="community-container">
 
-          <p className="eyebrow">WAR COMMUNITY</p>
+          <p className="eyebrow">
+            WAR COMMUNITY
+          </p>
 
-          <h1>ALMOST THERE.</h1>
+          <h1>UNAVAILABLE.</h1>
 
-          <p className="community-description">
+          <p className="community-error">
             {error}
           </p>
 
           <a
             href="/dashboard"
-            className="community-secondary-button"
+            className="admin-secondary-button"
           >
             RETURN TO DASHBOARD
           </a>
@@ -116,56 +113,57 @@ export default function CommunityPage() {
       <section className="community-container">
 
         <p className="eyebrow">
-          WAR — {side}
+          WAR COMMUNITY
         </p>
 
         <h1>
-          YOU'RE IN.
+          {community?.side}
+          <br />
+          COMMUNITY.
         </h1>
 
         <p className="community-description">
-          Your Stage 2 vote has been successfully recorded.
-          Welcome to the {side} community.
+          Stage 2 is complete. You can now join your
+          community group.
         </p>
 
-        <div className="community-success">
-
-          <span className="community-check">
-            ✓
-          </span>
-
-          <div>
-            <span className="community-label">
-              VOTING COMPLETE
-            </span>
-
-            <h2>{side}</h2>
-
-            <p>
-              Join your community to connect with other
-              people who chose {side}.
-            </p>
-          </div>
-
-        </div>
-
-        <a
-          href={community.whatsapp_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="community-button"
-        >
-          JOIN {side} COMMUNITY →
-        </a>
+        {community?.whatsapp_url && (
+          <a
+            href={community.whatsapp_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="community-button"
+          >
+            JOIN {community.side} COMMUNITY →
+          </a>
+        )}
 
         <a
           href="/dashboard"
-          className="community-secondary-button"
+          className="community-back"
         >
           RETURN TO DASHBOARD
         </a>
 
       </section>
     </main>
+  );
+}
+
+function CommunityFallback() {
+  return (
+    <main className="community-page">
+      <section className="community-container">
+        <p>LOADING COMMUNITY...</p>
+      </section>
+    </main>
+  );
+}
+
+export default function CommunityPage() {
+  return (
+    <Suspense fallback={<CommunityFallback />}>
+      <CommunityContent />
+    </Suspense>
   );
 }
