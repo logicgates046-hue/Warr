@@ -21,7 +21,7 @@
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-body), -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -71,8 +71,8 @@ button {
 }
 
 .eyebrow {
+  font-family: var(--font-heading), sans-serif;
   font-size: 42px;
-  font-weight: 900;
   letter-spacing: 2px;
   margin-bottom: 8px;
   background: repeating-linear-gradient(
@@ -94,8 +94,8 @@ button {
 }
 
 .hero h1 {
-  font-size: 44px;
-  font-weight: 900;
+  font-family: var(--font-heading), sans-serif;
+  font-size: 40px;
   line-height: 1.1;
   letter-spacing: -1px;
   margin-bottom: 16px;
@@ -150,15 +150,15 @@ button {
 .side.tutam h2, .side.tutam p, .side.tutam .side-label { color: #111; }
 
 .side-label {
+  font-family: var(--font-heading), sans-serif;
   font-size: 13px;
-  font-weight: 700;
   letter-spacing: 2px;
   opacity: 0.85;
 }
 
 .side h2 {
-  font-size: 28px;
-  font-weight: 900;
+  font-family: var(--font-heading), sans-serif;
+  font-size: 26px;
   margin: 6px 0 10px;
 }
 
