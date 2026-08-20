@@ -1,4 +1,16 @@
+import { Archivo_Black, Inter } from 'next/font/google';
 import './globals.css';
+
+const archivoBlack = Archivo_Black({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-heading',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-body',
+});
 
 export const metadata = {
   title: 'KE-WAR — Which Are You In?',
@@ -7,7 +19,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${archivoBlack.variable} ${inter.variable}`}>
       <body>
         <div className="ticker-wrap">
           <div className="ticker">
