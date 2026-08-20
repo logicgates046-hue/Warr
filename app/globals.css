@@ -277,3 +277,21 @@ button {
 .auth-button:disabled {
   opacity: 0.6;
 }
+.auth-form select {
+  background-color: var(--bg-card);
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 14px;
+  color: var(--text-primary);
+  font-size: 15px;
+  outline: none;
+  appearance: none;
+}
+
+.auth-form select:focus {
+  border-color: var(--flag-red);
+}
+
+.auth-form input[type="date"] {
+  color-scheme: dark;
+}
