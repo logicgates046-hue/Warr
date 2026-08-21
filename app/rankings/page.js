@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import BottomNav from '@/components/BottomNav';
 
 export default function RankingsPage() {
   const [userId, setUserId] = useState(null);
@@ -80,12 +81,18 @@ export default function RankingsPage() {
       .insert({ user_id: userId, side });
 
     if (voteError) {
-      setError('Something went wrong. Please try again.');
+      setError(voteError.message);
       setVoting(false);
       return;
     }
 
-    await supabase.from('profiles').update({ rankings_vote: side }).eq('id', userId);
+    const { error: profileError } = await supabase.from('profiles').update({ rankings_vote: side }).eq('id', userId);
+
+    if (profileError) {
+      setError(profileError.message);
+      setVoting(false);
+      return;
+    }
 
     setExistingVote(side);
     setVoting(false);
@@ -153,6 +160,8 @@ export default function RankingsPage() {
           </a>
         )}
       </section>
+
+      <BottomNav />
     </main>
   );
-                    }
+        }
