@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import BottomNav from '@/components/BottomNav';
 
 export default function CandidaturePage() {
   const [userId, setUserId] = useState(null);
@@ -23,11 +24,17 @@ export default function CandidaturePage() {
         return;
       }
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileFetchError } = await supabase
         .from('profiles')
         .select('side')
         .eq('id', authData.user.id)
         .single();
+
+      if (profileFetchError) {
+        setError(profileFetchError.message);
+        setLoading(false);
+        return;
+      }
 
       if (!profile?.side) {
         window.location.href = '/battle';
@@ -37,7 +44,7 @@ export default function CandidaturePage() {
       setUserId(authData.user.id);
       setSide(profile.side);
 
-      const { data: ticketData } = await supabase
+      const { data: ticketData, error: ticketError } = await supabase
         .from('tickets')
         .select(`
           id,
@@ -46,6 +53,12 @@ export default function CandidaturePage() {
           deputy:deputy_id ( name, photo_url )
         `)
         .eq('side', profile.side);
+
+      if (ticketError) {
+        setError(ticketError.message);
+        setLoading(false);
+        return;
+      }
 
       setTickets(ticketData || []);
 
@@ -75,12 +88,21 @@ export default function CandidaturePage() {
       .insert({ user_id: userId, ticket_id: ticketId });
 
     if (voteError) {
-      setError('Something went wrong. Please try again.');
+      setError(voteError.message);
       setVoting(false);
       return;
     }
 
-    await supabase.from('profiles').update({ candidature_ticket_id: ticketId }).eq('id', userId);
+    const { error: profileUpdateError } = await supabase
+      .from('profiles')
+      .update({ candidature_ticket_id: ticketId })
+      .eq('id', userId);
+
+    if (profileUpdateError) {
+      setError(profileUpdateError.message);
+      setVoting(false);
+      return;
+    }
 
     setExistingVote(ticketId);
     setVoting(false);
@@ -137,6 +159,8 @@ export default function CandidaturePage() {
           </a>
         )}
       </section>
+
+      <BottomNav />
     </main>
   );
         }
