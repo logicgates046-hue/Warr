@@ -20,6 +20,9 @@ export default function RegisterPage() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: { full_name: fullName },
+      },
     });
 
     if (signUpError) {
@@ -28,21 +31,13 @@ export default function RegisterPage() {
       return;
     }
 
-    if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.user.id,
-        full_name: fullName,
-      });
-
-      if (profileError) {
-        setError(profileError.message);
-        setLoading(false);
-        return;
-      }
-    }
-
     setLoading(false);
-    router.push('/complete-profile');
+
+    if (data.session) {
+      router.push('/complete-profile');
+    } else {
+      setError('Check your email to confirm your account, then log in.');
+    }
   };
 
   return (
