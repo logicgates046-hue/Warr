@@ -50,12 +50,18 @@ export default function BattlePage() {
       .insert({ user_id: userId, side });
 
     if (voteError) {
-      setError('Something went wrong. Please try again.');
+      setError(voteError.message);
       setVoting(false);
       return;
     }
 
-    await supabase.from('profiles').update({ side }).eq('id', userId);
+    const { error: profileError } = await supabase.from('profiles').update({ side }).eq('id', userId);
+
+    if (profileError) {
+      setError(profileError.message);
+      setVoting(false);
+      return;
+    }
 
     setExistingVote(side);
     setVoting(false);
