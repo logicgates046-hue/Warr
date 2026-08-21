@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import BottomNav from '@/components/BottomNav';
 
 export default function BattlePage() {
   const [userId, setUserId] = useState(null);
@@ -120,6 +121,8 @@ export default function BattlePage() {
           </a>
         )}
       </section>
+
+      <BottomNav />
     </main>
   );
         }
