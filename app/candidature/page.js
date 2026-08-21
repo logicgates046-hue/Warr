@@ -14,6 +14,7 @@ export default function CandidaturePage() {
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
   const [error, setError] = useState('');
+  const [showInfo, setShowInfo] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -125,20 +126,19 @@ export default function CandidaturePage() {
     <main className="home">
       <section className="hero">
         <p className="eyebrow small">KE-WAR</p>
-        <h1 className="battle-title">CANDIDATURE</h1>
 
-        <div className="guide-box">
-          <p className="guide-text">
-            You have already chosen your side (<strong>{side}</strong>).
-            <br /><br />
-            Now choose the <strong>presidential ticket</strong> you want to support within your side.
-            <br /><br />
-            Each card shows a President + Deputy President pair.
-            Tap the ticket you prefer.
-            <br /><br />
-            Your vote is final — choose carefully.
-          </p>
+        <div className="title-with-info">
+          <h1 className="battle-title">CANDIDATURE</h1>
+          <button className="info-icon" onClick={() => setShowInfo(true)}>
+            ⓘ
+          </button>
         </div>
+
+        <p className="intro">
+          {existingVote
+            ? `You have selected your preferred ticket for ${side}.`
+            : `Choose your preferred presidential ticket for ${side}.`}
+        </p>
 
         {!existingVote && (
           <button onClick={handleShuffle} className="shuffle-button">
@@ -183,7 +183,35 @@ export default function CandidaturePage() {
         )}
       </section>
 
+      {/* INFO MODAL */}
+      {showInfo && (
+        <div className="modal-overlay" onClick={() => setShowInfo(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowInfo(false)}>
+              ✕
+            </button>
+            <h2>Candidature Guide</h2>
+            <p>
+              You have already chosen your side (<strong>{side}</strong>).
+            </p>
+            <p>
+              Now choose the <strong>presidential ticket</strong> you want to support within your side.
+            </p>
+            <p>
+              Each card shows a President + Deputy President pair.  
+              Tap the ticket you prefer.
+            </p>
+            <p>
+              Your vote is final — choose carefully.
+            </p>
+            <button className="modal-button" onClick={() => setShowInfo(false)}>
+              GOT IT
+            </button>
+          </div>
+        </div>
+      )}
+
       <BottomNav />
     </main>
   );
-        }
+                }
