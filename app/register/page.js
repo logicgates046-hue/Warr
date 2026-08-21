@@ -25,13 +25,17 @@ export default function RegisterPage() {
       },
     });
 
+    setLoading(false);
+
     if (signUpError) {
+      if (signUpError.message.includes('profiles_pkey')) {
+        // Account was actually created despite this error — proceed normally
+        router.push(data?.session ? '/complete-profile' : '/login');
+        return;
+      }
       setError(signUpError.message);
-      setLoading(false);
       return;
     }
-
-    setLoading(false);
 
     if (data.session) {
       router.push('/complete-profile');
@@ -89,4 +93,4 @@ export default function RegisterPage() {
       </p>
     </main>
   );
-}
+            }
