@@ -415,3 +415,40 @@ button {
   font-size: 28px;
   margin-bottom: 8px;
 }
+/* Guide box */
+.guide-box {
+  background: var(--bg-card);
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.guide-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.guide-text strong {
+  color: #ffffff;
+}
+
+/* Shuffle button */
+.shuffle-button {
+  background: #222;
+  color: #ffd500;
+  border: 1px solid #ffd500;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  width: 100%;
+  letter-spacing: 0.5px;
+}
+
+.shuffle-button:hover {
+  background: #2a2a2a;
+}
