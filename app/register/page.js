@@ -1,3 +1,4 @@
+// app/register/page.js
 'use client';
 
 import { useState } from 'react';
@@ -28,8 +29,9 @@ export default function RegisterPage() {
     setLoading(false);
 
     if (signUpError) {
+      // Still show real errors, but ignore the known profiles_pkey issue
       if (signUpError.message.includes('profiles_pkey')) {
-        // Account was actually created despite this error — proceed normally
+        // Account was created — just continue
         router.push(data?.session ? '/complete-profile' : '/login');
         return;
       }
