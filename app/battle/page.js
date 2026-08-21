@@ -12,6 +12,7 @@ export default function BattlePage() {
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
   const [error, setError] = useState('');
+  const [showInfo, setShowInfo] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -55,7 +56,10 @@ export default function BattlePage() {
       return;
     }
 
-    const { error: profileError } = await supabase.from('profiles').update({ side }).eq('id', userId);
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ side })
+      .eq('id', userId);
 
     if (profileError) {
       setError(profileError.message);
@@ -79,9 +83,16 @@ export default function BattlePage() {
     <main className="home">
       <section className="hero">
         <p className="eyebrow small">KE-WAR</p>
-        <h1 className="battle-title">
-          {existingVote ? "YOU'VE CAST YOUR VOTE" : 'WHICH ARE YOU IN?'}
-        </h1>
+
+        <div className="title-with-info">
+          <h1 className="battle-title">
+            {existingVote ? "YOU'VE CAST YOUR VOTE" : 'WHICH ARE YOU IN?'}
+          </h1>
+          <button className="info-icon" onClick={() => setShowInfo(true)}>
+            ⓘ
+          </button>
+        </div>
+
         <p className="intro">
           {existingVote
             ? `You're standing with ${existingVote}. Continue to see your side's candidates.`
@@ -121,7 +132,33 @@ export default function BattlePage() {
         )}
       </section>
 
+      {/* INFO MODAL */}
+      {showInfo && (
+        <div className="modal-overlay" onClick={() => setShowInfo(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowInfo(false)}>
+              ✕
+            </button>
+            <h2>How KE-WAR Works</h2>
+            <p>
+              KE-WAR has two sides:
+            </p>
+            <ul>
+              <li><strong>WANTAM</strong> — You believe the current President should serve only <strong>one term</strong>.</li>
+              <li><strong>TUTAM</strong> — You believe the current President deserves a <strong>second term</strong>.</li>
+            </ul>
+            <p>
+              Tap the side that matches your position.  
+              This choice is permanent — choose carefully.
+            </p>
+            <button className="modal-button" onClick={() => setShowInfo(false)}>
+              GOT IT
+            </button>
+          </div>
+        </div>
+      )}
+
       <BottomNav />
     </main>
   );
-        }
+}
