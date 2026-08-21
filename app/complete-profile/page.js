@@ -17,6 +17,17 @@ const KENYAN_COUNTIES = [
   'Vihiga', 'Wajir', 'West Pokot',
 ];
 
+function calculateAge(dobString) {
+  const dob = new Date(dobString);
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 export default function CompleteProfilePage() {
   const [dob, setDob] = useState('');
   const [county, setCounty] = useState('');
@@ -38,6 +49,12 @@ export default function CompleteProfilePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (calculateAge(dob) < 18) {
+      setError('You must be at least 18 years old to join KE-WAR.');
+      return;
+    }
+
     setLoading(true);
 
     const { error: updateError } = await supabase
@@ -59,7 +76,7 @@ export default function CompleteProfilePage() {
     <main className="auth-page">
       <p className="eyebrow small">KE-WAR</p>
       <h1 className="auth-title">COMPLETE YOUR PROFILE</h1>
-      <p className="auth-subtitle">Just a couple more details before you enter the fight.</p>
+      <p className="auth-subtitle">Just a couple more details before you enter the fight. You must be 18 or older.</p>
 
       <form onSubmit={handleSubmit} className="auth-form">
         <label>DATE OF BIRTH</label>
