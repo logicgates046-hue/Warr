@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
@@ -23,16 +25,14 @@ export default function RankingsPage() {
 
       setUserId(authData.user.id);
 
-      const ticketQuery = supabase
+      const { data: wantamData } = await supabase
         .from('tickets')
         .select(`
           id,
           vote_count,
           president:president_id ( name, photo_url ),
           deputy:deputy_id ( name, photo_url )
-        `);
-
-      const { data: wantamData } = await ticketQuery
+        `)
         .eq('side', 'WANTAM')
         .order('vote_count', { ascending: false })
         .limit(1)
@@ -155,4 +155,4 @@ export default function RankingsPage() {
       </section>
     </main>
   );
-      }
+                    }
