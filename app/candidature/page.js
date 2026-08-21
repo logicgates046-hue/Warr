@@ -108,6 +108,11 @@ export default function CandidaturePage() {
     setVoting(false);
   };
 
+  const handleShuffle = () => {
+    const shuffled = [...tickets].sort(() => Math.random() - 0.5);
+    setTickets(shuffled);
+  };
+
   if (loading) {
     return (
       <main className="home">
@@ -121,7 +126,25 @@ export default function CandidaturePage() {
       <section className="hero">
         <p className="eyebrow small">KE-WAR</p>
         <h1 className="battle-title">CANDIDATURE</h1>
-        <p className="intro">Choose your preferred candidate for {side}.</p>
+
+        <div className="guide-box">
+          <p className="guide-text">
+            You have already chosen your side (<strong>{side}</strong>).
+            <br /><br />
+            Now choose the <strong>presidential ticket</strong> you want to support within your side.
+            <br /><br />
+            Each card shows a President + Deputy President pair.
+            Tap the ticket you prefer.
+            <br /><br />
+            Your vote is final — choose carefully.
+          </p>
+        </div>
+
+        {!existingVote && (
+          <button onClick={handleShuffle} className="shuffle-button">
+            🔀 SHUFFLE TICKETS
+          </button>
+        )}
 
         <div className="tickets-list">
           {tickets.map((ticket) => (
