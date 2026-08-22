@@ -1,6 +1,7 @@
 import { Archivo_Black, Inter } from 'next/font/google';
 import './globals.css';
 import LiveTicker from '@/components/LiveTicker';
+import CountdownTimer from '@/components/CountdownTimer';
 
 const archivoBlack = Archivo_Black({
   weight: '400',
@@ -22,6 +23,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${archivoBlack.variable} ${inter.variable}`}>
       <body>
+        <CountdownTimer />
         <LiveTicker />
         {children}
       </body>
