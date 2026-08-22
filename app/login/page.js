@@ -27,15 +27,27 @@ export default function LoginPage() {
       return;
     }
 
-    // Check if profile is complete (has a county set)
-    const { data: profile } = await supabase
+    // Get profile including is_admin
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('county')
+      .select('county, is_admin')
       .eq('id', data.user.id)
       .single();
 
     setLoading(false);
 
+    if (profileError) {
+      setError(profileError.message);
+      return;
+    }
+
+    // If user is admin → go to admin panel
+    if (profile?.is_admin === true) {
+      router.push('/admin');
+      return;
+    }
+
+    // Normal users
     if (!profile?.county) {
       router.push('/complete-profile');
     } else {
@@ -82,4 +94,4 @@ export default function LoginPage() {
       </p>
     </main>
   );
-          }
+}
