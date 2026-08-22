@@ -28,38 +28,33 @@ export default function RankingsPage() {
 
       setUserId(authData.user.id);
 
-      const { data: candVote } = await supabase
-        .from('candidature_votes')
-        .select('ticket_id')
-        .eq('user_id', authData.user.id)
-        .single();
+      const [
+        { data: candVote },
+        { data: wantamData },
+        { data: tutamData },
+        { data: rankVote },
+      ] = await Promise.all([
+        supabase.from('candidature_votes').select('ticket_id').eq('user_id', authData.user.id).single(),
+        supabase
+          .from('tickets')
+          .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
+          .eq('side', 'WANTAM')
+          .order('vote_count', { ascending: false })
+          .limit(1)
+          .single(),
+        supabase
+          .from('tickets')
+          .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
+          .eq('side', 'TUTAM')
+          .order('vote_count', { ascending: false })
+          .limit(1)
+          .single(),
+        supabase.from('rankings_votes').select('side').eq('user_id', authData.user.id).single(),
+      ]);
 
       setHasCandidatureVote(!!candVote);
-
-      const { data: wantamData } = await supabase
-        .from('tickets')
-        .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
-        .eq('side', 'WANTAM')
-        .order('vote_count', { ascending: false })
-        .limit(1)
-        .single();
-
-      const { data: tutamData } = await supabase
-        .from('tickets')
-        .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
-        .eq('side', 'TUTAM')
-        .order('vote_count', { ascending: false })
-        .limit(1)
-        .single();
-
       setWantamTicket(wantamData);
       setTutamTicket(tutamData);
-
-      const { data: rankVote } = await supabase
-        .from('rankings_votes')
-        .select('side')
-        .eq('user_id', authData.user.id)
-        .single();
 
       if (rankVote) {
         setExistingVote(rankVote.side);
@@ -193,4 +188,4 @@ export default function RankingsPage() {
       <BottomNav />
     </main>
   );
-          }
+        }
