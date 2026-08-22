@@ -6,18 +6,13 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import BottomNav from '@/components/BottomNav';
 
-const WHATSAPP_LINKS = {
-  WANTAM: 'https://chat.whatsapp.com/KgFPeGjFM4OJYbmWlWHrFU?s=cl&p=a&ilr=4',
-  TUTAM: 'https://chat.whatsapp.com/I7Fz4EbL2s0Cbfs5vPBMp4?s=cl&p=a&ilr=4',
-};
-
 export default function CommunityPage() {
   const [userId, setUserId] = useState(null);
   const [side, setSide] = useState(null);
   const [joined, setJoined] = useState(false);
+  const [links, setLinks] = useState({ WANTAM: '', TUTAM: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showInfo, setShowInfo] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -38,6 +33,16 @@ export default function CommunityPage() {
 
       setSide(profile?.side || null);
       setJoined(!!profile?.joined_community);
+
+      const { data: settings } = await supabase.from('settings').select('*');
+      const wantam = settings?.find((s) => s.key === 'whatsapp_wantam');
+      const tutam = settings?.find((s) => s.key === 'whatsapp_tutam');
+
+      setLinks({
+        WANTAM: wantam?.value || '',
+        TUTAM: tutam?.value || '',
+      });
+
       setLoading(false);
     };
 
@@ -59,7 +64,7 @@ export default function CommunityPage() {
     }
 
     setJoined(true);
-    window.open(WHATSAPP_LINKS[side], '_blank');
+    window.open(links[side], '_blank');
   };
 
   if (loading) {
@@ -74,11 +79,7 @@ export default function CommunityPage() {
     <main className="home">
       <section className="hero">
         <p className="eyebrow small">KE-WAR</p>
-
-        <div className="title-with-info">
-          <h1 className="battle-title">COMMUNITY</h1>
-          <button className="info-icon" onClick={() => setShowInfo(true)}>i</button>
-        </div>
+        <h1 className="battle-title">COMMUNITY</h1>
 
         {!side ? (
           <p className="intro">
@@ -106,18 +107,6 @@ export default function CommunityPage() {
           </>
         )}
       </section>
-
-      {showInfo && (
-        <div className="modal-overlay" onClick={() => setShowInfo(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowInfo(false)}>×</button>
-            <h2>Community Guide</h2>
-            <p>Once you vote in Battle, you unlock access to your side's official WhatsApp community.</p>
-            <p>Tap the join button to connect with other KE-WAR members who share your side.</p>
-            <button className="modal-button" onClick={() => setShowInfo(false)}>GOT IT</button>
-          </div>
-        </div>
-      )}
 
       <BottomNav />
     </main>
