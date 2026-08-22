@@ -22,16 +22,25 @@ export default function AdminPage() {
         return;
       }
 
-      const { data: profile } = await supabase
+      // ===== DEBUG VERSION =====
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('is_admin')
         .eq('id', authData.user.id)
         .single();
 
+      console.log('User ID:', authData.user.id);
+      console.log('Profile:', profile);
+      console.log('Profile Error:', profileError);
+
       if (!profile?.is_admin) {
+        alert(
+          `Not recognized as admin.\n\nProfile: ${JSON.stringify(profile)}\nError: ${profileError?.message || 'None'}`
+        );
         router.push('/battle');
         return;
       }
+      // ===== END DEBUG =====
 
       setIsAdmin(true);
 
@@ -150,4 +159,4 @@ export default function AdminPage() {
       </section>
     </main>
   );
-}
+    }
