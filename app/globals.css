@@ -557,3 +557,61 @@ button {
 .ticket-card.locked {
   opacity: 0.85;
 }
+.profile-card {
+  background-color: var(--bg-card);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35), 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.profile-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #2a2a2a;
+  text-align: left;
+}
+
+.profile-row:last-child {
+  border-bottom: none;
+}
+
+.profile-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.profile-value {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.profile-value.highlight {
+  color: var(--flag-red);
+  font-family: var(--font-heading), sans-serif;
+}
+
+.profile-section-title {
+  font-family: var(--font-heading), sans-serif;
+  font-size: 18px;
+  text-align: left;
+  margin: 24px 0 12px;
+}
+
+.logout-button {
+  width: 100%;
+  background-color: transparent;
+  border: 1px solid var(--flag-red);
+  color: var(--flag-red);
+  font-weight: 800;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  letter-spacing: 1px;
+  margin-top: 8px;
+}
