@@ -536,3 +536,24 @@ button {
   width: 100%;
   margin-top: 10px;
   }
+.vote-ticket-button {
+  width: 100%;
+  margin-top: 14px;
+  background-color: var(--flag-white);
+  color: #111;
+  font-weight: 800;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.vote-ticket-button:disabled {
+  background-color: #333;
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.ticket-card.locked {
+  opacity: 0.85;
+}
