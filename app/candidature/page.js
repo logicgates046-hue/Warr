@@ -22,15 +22,16 @@ export default function CandidaturePage() {
   const [showInfo, setShowInfo] = useState(false);
 
   const refreshTickets = async () => {
-    const { data: wantamData } = await supabase
-      .from('tickets')
-      .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
-      .eq('side', 'WANTAM');
-
-    const { data: tutamData } = await supabase
-      .from('tickets')
-      .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
-      .eq('side', 'TUTAM');
+    const [{ data: wantamData }, { data: tutamData }] = await Promise.all([
+      supabase
+        .from('tickets')
+        .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
+        .eq('side', 'WANTAM'),
+      supabase
+        .from('tickets')
+        .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
+        .eq('side', 'TUTAM'),
+    ]);
 
     setWantamTickets(wantamData || []);
     setTutamTickets(tutamData || []);
@@ -48,16 +49,15 @@ export default function CandidaturePage() {
 
       setUserId(authData.user.id);
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('side')
-        .eq('id', authData.user.id)
-        .single();
+      const [{ data: profile }, ticketResult] = await Promise.all([
+        supabase.from('profiles').select('side').eq('id', authData.user.id).single(),
+        refreshTickets(),
+      ]);
 
       const userSide = profile?.side || null;
       setSide(userSide);
 
-      const { wantamData, tutamData } = await refreshTickets();
+      const { wantamData, tutamData } = ticketResult;
 
       if (userSide) {
         setSideTickets(userSide === 'WANTAM' ? (wantamData || []) : (tutamData || []));
@@ -105,7 +105,6 @@ export default function CandidaturePage() {
       return;
     }
 
-    // Refresh tickets so the new vote count shows immediately
     const { wantamData, tutamData } = await refreshTickets();
     if (side) {
       setSideTickets(side === 'WANTAM' ? (wantamData || []) : (tutamData || []));
