@@ -8,12 +8,14 @@ import BottomNav from '@/components/BottomNav';
 
 export default function RankingsPage() {
   const [userId, setUserId] = useState(null);
+  const [hasCandidatureVote, setHasCandidatureVote] = useState(false);
   const [wantamTicket, setWantamTicket] = useState(null);
   const [tutamTicket, setTutamTicket] = useState(null);
   const [existingVote, setExistingVote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
   const [error, setError] = useState('');
+  const [showInfo, setShowInfo] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -26,14 +28,17 @@ export default function RankingsPage() {
 
       setUserId(authData.user.id);
 
+      const { data: candVote } = await supabase
+        .from('candidature_votes')
+        .select('ticket_id')
+        .eq('user_id', authData.user.id)
+        .single();
+
+      setHasCandidatureVote(!!candVote);
+
       const { data: wantamData } = await supabase
         .from('tickets')
-        .select(`
-          id,
-          vote_count,
-          president:president_id ( name, photo_url ),
-          deputy:deputy_id ( name, photo_url )
-        `)
+        .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
         .eq('side', 'WANTAM')
         .order('vote_count', { ascending: false })
         .limit(1)
@@ -41,12 +46,7 @@ export default function RankingsPage() {
 
       const { data: tutamData } = await supabase
         .from('tickets')
-        .select(`
-          id,
-          vote_count,
-          president:president_id ( name, photo_url ),
-          deputy:deputy_id ( name, photo_url )
-        `)
+        .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
         .eq('side', 'TUTAM')
         .order('vote_count', { ascending: false })
         .limit(1)
@@ -55,14 +55,14 @@ export default function RankingsPage() {
       setWantamTicket(wantamData);
       setTutamTicket(tutamData);
 
-      const { data: voteData } = await supabase
+      const { data: rankVote } = await supabase
         .from('rankings_votes')
         .select('side')
         .eq('user_id', authData.user.id)
         .single();
 
-      if (voteData) {
-        setExistingVote(voteData.side);
+      if (rankVote) {
+        setExistingVote(rankVote.side);
       }
 
       setLoading(false);
@@ -72,7 +72,7 @@ export default function RankingsPage() {
   }, []);
 
   const handleVote = async (side) => {
-    if (existingVote || voting) return;
+    if (!hasCandidatureVote || existingVote || voting) return;
     setVoting(true);
     setError('');
 
@@ -106,12 +106,11 @@ export default function RankingsPage() {
     );
   }
 
+  const locked = !hasCandidatureVote;
+
   const RankingTicket = ({ ticket, sideKey }) => (
-    <div
-      className={`ticket-card ${sideKey.toLowerCase()} ranking-ticket ${existingVote && existingVote !== sideKey ? 'dimmed' : ''}`}
-      onClick={() => handleVote(sideKey)}
-    >
-      <span className="side-label">MOST PREFERRED — {sideKey}</span>
+    <div className={`ticket-card ${sideKey.toLowerCase()} ${locked ? 'locked' : ''}`}>
+      <span className="side-label">MOST CHOSEN — {sideKey}</span>
       <div className="ticket-people">
         <div className="ticket-person">
           <img src={ticket.president.photo_url} alt={ticket.president.name} />
@@ -131,7 +130,19 @@ export default function RankingsPage() {
       {existingVote && (
         <p className="vote-count-reveal">{ticket.vote_count} votes</p>
       )}
-      {existingVote === sideKey && <span className="voted-badge">✓ YOUR VOTE</span>}
+      <button
+        className="vote-ticket-button"
+        disabled={locked || !!existingVote || voting}
+        onClick={() => handleVote(sideKey)}
+      >
+        {locked
+          ? 'VOTE IN CANDIDATURE FIRST'
+          : existingVote === sideKey
+          ? 'YOUR VOTE'
+          : existingVote
+          ? 'VOTED'
+          : 'VOTE FOR THIS SIDE'}
+      </button>
     </div>
   );
 
@@ -139,11 +150,18 @@ export default function RankingsPage() {
     <main className="home">
       <section className="hero">
         <p className="eyebrow small">KE-WAR</p>
-        <h1 className="battle-title">RANKINGS</h1>
+
+        <div className="title-with-info">
+          <h1 className="battle-title">RANKINGS</h1>
+          <button className="info-icon" onClick={() => setShowInfo(true)}>i</button>
+        </div>
+
         <p className="intro">
-          {existingVote
+          {locked
+            ? "Vote in Candidature to unlock voting here. You can still see each side's most chosen ticket below."
+            : existingVote
             ? 'Thanks for voting — here are the results so far.'
-            : "See each side's most preferred ticket. Vote to reveal the results."}
+            : "See each side's most chosen ticket, then cast your vote to reveal the numbers."}
         </p>
 
         {wantamTicket && <RankingTicket ticket={wantamTicket} sideKey="WANTAM" />}
@@ -155,11 +173,22 @@ export default function RankingsPage() {
         {error && <p className="auth-error">{error}</p>}
 
         {existingVote && (
-          <a href="/community" className="enter-button">
-            CONTINUE TO COMMUNITY
-          </a>
+          <a href="/community" className="enter-button">CONTINUE TO COMMUNITY</a>
         )}
       </section>
+
+      {showInfo && (
+        <div className="modal-overlay" onClick={() => setShowInfo(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowInfo(false)}>×</button>
+            <h2>Rankings Guide</h2>
+            <p>These are the most chosen tickets so far for WANTAM and TUTAM.</p>
+            <p>You must vote in Candidature before you can vote here.</p>
+            <p>Vote counts stay hidden until you cast your own Rankings vote.</p>
+            <button className="modal-button" onClick={() => setShowInfo(false)}>GOT IT</button>
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </main>
