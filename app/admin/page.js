@@ -9,27 +9,32 @@ import { supabase } from '@/lib/supabase';
 export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [debugInfo, setDebugInfo] = useState('');
   const [stats, setStats] = useState(null);
   const [candidatureResults, setCandidatureResults] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
     const load = async () => {
-      const { data: authData } = await supabase.auth.getUser();
+      const { data: authData, error: authError } = await supabase.auth.getUser();
 
       if (!authData.user) {
         router.push('/login');
         return;
       }
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('is_admin')
+        .select('is_admin, email')
         .eq('id', authData.user.id)
         .single();
 
+      setDebugInfo(
+        `User ID: ${authData.user.id} | Email: ${authData.user.email} | Profile: ${JSON.stringify(profile)} | Error: ${profileError ? profileError.message : 'none'}`
+      );
+
       if (!profile?.is_admin) {
-        router.push('/battle');
+        setLoading(false);
         return;
       }
 
@@ -92,13 +97,27 @@ export default function AdminPage() {
     );
   }
 
-  if (!isAdmin) return null;
+  if (!isAdmin) {
+    return (
+      <main className="home">
+        <p className="auth-error" style={{ padding: '20px', wordBreak: 'break-all' }}>{debugInfo}</p>
+      </main>
+    );
+  }
 
   return (
     <main className="home">
       <section className="hero">
         <p className="eyebrow small">KE-WAR</p>
         <h1 className="battle-title">ADMIN PANEL</h1>
+
+        <div className="admin-nav">
+          <a href="/admin" className="admin-nav-item active">Overview</a>
+          <a href="/admin/candidates" className="admin-nav-item">Candidates</a>
+          <a href="/admin/tickets" className="admin-nav-item">Tickets</a>
+          <a href="/admin/settings" className="admin-nav-item">Settings</a>
+          <a href="/admin/users" className="admin-nav-item">Users</a>
+        </div>
 
         <h2 className="profile-section-title">OVERVIEW</h2>
         <div className="profile-card">
@@ -142,4 +161,4 @@ export default function AdminPage() {
       </section>
     </main>
   );
-      }
+}
