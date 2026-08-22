@@ -9,7 +9,12 @@ import BottomNav from '@/components/BottomNav';
 export default function CandidaturePage() {
   const [userId, setUserId] = useState(null);
   const [side, setSide] = useState(null);
-  const [tickets, setTickets] = useState([]);
+  const [wantamTickets, setWantamTickets] = useState([]);
+  const [tutamTickets, setTutamTickets] = useState([]);
+  const [wantamIndex, setWantamIndex] = useState(0);
+  const [tutamIndex, setTutamIndex] = useState(0);
+  const [sideTickets, setSideTickets] = useState([]);
+  const [ticketIndex, setTicketIndex] = useState(0);
   const [existingVote, setExistingVote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
@@ -25,52 +30,42 @@ export default function CandidaturePage() {
         return;
       }
 
-      const { data: profile, error: profileFetchError } = await supabase
+      setUserId(authData.user.id);
+
+      const { data: profile } = await supabase
         .from('profiles')
         .select('side')
         .eq('id', authData.user.id)
         .single();
 
-      if (profileFetchError) {
-        setError(profileFetchError.message);
-        setLoading(false);
-        return;
-      }
+      const userSide = profile?.side || null;
+      setSide(userSide);
 
-      if (!profile?.side) {
-        window.location.href = '/battle';
-        return;
-      }
-
-      setUserId(authData.user.id);
-      setSide(profile.side);
-
-      const { data: ticketData, error: ticketError } = await supabase
+      const { data: wantamData } = await supabase
         .from('tickets')
-        .select(`
-          id,
-          vote_count,
-          president:president_id ( name, photo_url ),
-          deputy:deputy_id ( name, photo_url )
-        `)
-        .eq('side', profile.side);
+        .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
+        .eq('side', 'WANTAM');
 
-      if (ticketError) {
-        setError(ticketError.message);
-        setLoading(false);
-        return;
-      }
+      const { data: tutamData } = await supabase
+        .from('tickets')
+        .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
+        .eq('side', 'TUTAM');
 
-      setTickets(ticketData || []);
+      setWantamTickets(wantamData || []);
+      setTutamTickets(tutamData || []);
 
-      const { data: voteData } = await supabase
-        .from('candidature_votes')
-        .select('ticket_id')
-        .eq('user_id', authData.user.id)
-        .single();
+      if (userSide) {
+        setSideTickets(userSide === 'WANTAM' ? (wantamData || []) : (tutamData || []));
 
-      if (voteData) {
-        setExistingVote(voteData.ticket_id);
+        const { data: voteData } = await supabase
+          .from('candidature_votes')
+          .select('ticket_id')
+          .eq('user_id', authData.user.id)
+          .single();
+
+        if (voteData) {
+          setExistingVote(voteData.ticket_id);
+        }
       }
 
       setLoading(false);
@@ -80,7 +75,7 @@ export default function CandidaturePage() {
   }, []);
 
   const handleVote = async (ticketId) => {
-    if (existingVote || voting) return;
+    if (!side || existingVote || voting) return;
     setVoting(true);
     setError('');
 
@@ -109,9 +104,19 @@ export default function CandidaturePage() {
     setVoting(false);
   };
 
-  const handleShuffle = () => {
-    const shuffled = [...tickets].sort(() => Math.random() - 0.5);
-    setTickets(shuffled);
+  const shuffleWantam = () => {
+    if (wantamTickets.length < 2) return;
+    setWantamIndex((prev) => (prev + 1) % wantamTickets.length);
+  };
+
+  const shuffleTutam = () => {
+    if (tutamTickets.length < 2) return;
+    setTutamIndex((prev) => (prev + 1) % tutamTickets.length);
+  };
+
+  const shuffleSideTicket = () => {
+    if (sideTickets.length < 2) return;
+    setTicketIndex((prev) => (prev + 1) % sideTickets.length);
   };
 
   if (loading) {
@@ -122,6 +127,37 @@ export default function CandidaturePage() {
     );
   }
 
+  const TicketCard = ({ ticket, sideKey, locked, onVote }) => (
+    <div className={`ticket-card ${sideKey.toLowerCase()} ${locked ? 'locked' : ''}`}>
+      <span className="side-label">{sideKey}</span>
+      <div className="ticket-people">
+        <div className="ticket-person">
+          <img src={ticket.president.photo_url} alt={ticket.president.name} />
+          <div>
+            <span className="ticket-role">PRESIDENT</span>
+            <span className="ticket-name">{ticket.president.name}</span>
+          </div>
+        </div>
+        <div className="ticket-person">
+          <img src={ticket.deputy.photo_url} alt={ticket.deputy.name} />
+          <div>
+            <span className="ticket-role">DEPUTY PRESIDENT</span>
+            <span className="ticket-name">{ticket.deputy.name}</span>
+          </div>
+        </div>
+      </div>
+      {onVote && (
+        <button
+          className="vote-ticket-button"
+          disabled={locked || voting}
+          onClick={() => onVote(ticket.id)}
+        >
+          {locked ? 'VOTE IN BATTLE FIRST' : 'VOTE FOR THIS TICKET'}
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <main className="home">
       <section className="hero">
@@ -129,84 +165,69 @@ export default function CandidaturePage() {
 
         <div className="title-with-info">
           <h1 className="battle-title">CANDIDATURE</h1>
-          <button className="info-icon" onClick={() => setShowInfo(true)}>
-            ⓘ
-          </button>
+          <button className="info-icon" onClick={() => setShowInfo(true)}>i</button>
         </div>
 
-        <p className="intro">
-          {existingVote
-            ? `You have selected your preferred ticket for ${side}.`
-            : `Choose your preferred presidential ticket for ${side}.`}
-        </p>
+        {!side ? (
+          <>
+            <p className="intro">
+              You haven't voted in Battle yet. Browse both sides' tickets below —
+              vote in Battle to unlock voting here.
+            </p>
 
-        {!existingVote && (
-          <button onClick={handleShuffle} className="shuffle-button">
-            🔀 SHUFFLE TICKETS
-          </button>
+            {wantamTickets[wantamIndex] && (
+              <>
+                <TicketCard ticket={wantamTickets[wantamIndex]} sideKey="WANTAM" locked onVote={handleVote} />
+                <button onClick={shuffleWantam} className="shuffle-button">SHUFFLE WANTAM</button>
+              </>
+            )}
+
+            <div className="versus">VS</div>
+
+            {tutamTickets[tutamIndex] && (
+              <>
+                <TicketCard ticket={tutamTickets[tutamIndex]} sideKey="TUTAM" locked onVote={handleVote} />
+                <button onClick={shuffleTutam} className="shuffle-button">SHUFFLE TUTAM</button>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="intro">
+              {existingVote
+                ? `You have selected your preferred ticket for ${side}. Feel free to keep browsing.`
+                : `Choose your preferred presidential ticket for ${side}.`}
+            </p>
+
+            {sideTickets[ticketIndex] && (
+              <TicketCard
+                ticket={sideTickets[ticketIndex]}
+                sideKey={side}
+                locked={!!existingVote}
+                onVote={handleVote}
+              />
+            )}
+
+            <button onClick={shuffleSideTicket} className="shuffle-button">SHUFFLE TICKET</button>
+
+            {existingVote && (
+              <a href="/rankings" className="enter-button">CONTINUE TO RANKINGS</a>
+            )}
+          </>
         )}
-
-        <div className="tickets-list">
-          {tickets.map((ticket) => (
-            <div
-              key={ticket.id}
-              className={`ticket-card ${side.toLowerCase()} ${existingVote && existingVote !== ticket.id ? 'dimmed' : ''}`}
-              onClick={() => handleVote(ticket.id)}
-            >
-              <div className="ticket-people">
-                <div className="ticket-person">
-                  <img src={ticket.president.photo_url} alt={ticket.president.name} />
-                  <div>
-                    <span className="ticket-role">PRESIDENT</span>
-                    <span className="ticket-name">{ticket.president.name}</span>
-                  </div>
-                </div>
-                <div className="ticket-person">
-                  <img src={ticket.deputy.photo_url} alt={ticket.deputy.name} />
-                  <div>
-                    <span className="ticket-role">DEPUTY PRESIDENT</span>
-                    <span className="ticket-name">{ticket.deputy.name}</span>
-                  </div>
-                </div>
-              </div>
-              {existingVote === ticket.id && <span className="voted-badge">✓ YOUR VOTE</span>}
-            </div>
-          ))}
-        </div>
 
         {error && <p className="auth-error">{error}</p>}
-
-        {existingVote && (
-          <a href="/rankings" className="enter-button">
-            CONTINUE TO RANKINGS
-          </a>
-        )}
       </section>
 
-      {/* INFO MODAL */}
       {showInfo && (
         <div className="modal-overlay" onClick={() => setShowInfo(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowInfo(false)}>
-              ✕
-            </button>
+            <button className="modal-close" onClick={() => setShowInfo(false)}>×</button>
             <h2>Candidature Guide</h2>
-            <p>
-              You have already chosen your side (<strong>{side}</strong>).
-            </p>
-            <p>
-              Now choose the <strong>presidential ticket</strong> you want to support within your side.
-            </p>
-            <p>
-              Each card shows a President + Deputy President pair.  
-              Tap the ticket you prefer.
-            </p>
-            <p>
-              Your vote is final — choose carefully.
-            </p>
-            <button className="modal-button" onClick={() => setShowInfo(false)}>
-              GOT IT
-            </button>
+            <p>Each card shows one President + Deputy President ticket at a time.</p>
+            <p>Tap Shuffle to browse other tickets — anytime, even after voting.</p>
+            <p>You must vote in Battle first before you can vote here.</p>
+            <button className="modal-button" onClick={() => setShowInfo(false)}>GOT IT</button>
           </div>
         </div>
       )}
@@ -214,4 +235,4 @@ export default function CandidaturePage() {
       <BottomNav />
     </main>
   );
-                }
+          }
