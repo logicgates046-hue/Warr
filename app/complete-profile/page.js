@@ -28,6 +28,14 @@ function calculateAge(dobString) {
   return age;
 }
 
+function getTodayString() {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export default function CompleteProfilePage() {
   const [dob, setDob] = useState('');
   const [county, setCounty] = useState('');
@@ -35,6 +43,7 @@ export default function CompleteProfilePage() {
   const [error, setError] = useState('');
   const [userId, setUserId] = useState(null);
   const router = useRouter();
+  const todayString = getTodayString();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -49,6 +58,14 @@ export default function CompleteProfilePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    const dobDate = new Date(dob);
+    const today = new Date(todayString);
+
+    if (dobDate > today) {
+      setError('Date of birth cannot be in the future.');
+      return;
+    }
 
     if (calculateAge(dob) < 18) {
       setError('You must be at least 18 years old to join KE-WAR.');
@@ -83,6 +100,7 @@ export default function CompleteProfilePage() {
         <input
           type="date"
           value={dob}
+          max={todayString}
           onChange={(e) => setDob(e.target.value)}
           required
         />
