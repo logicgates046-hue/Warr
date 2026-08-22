@@ -648,3 +648,50 @@ button {
   padding: 6px 10px;
   border-radius: 8px;
 }
+/* Countdown Bar */
+.countdown-bar {
+  position: sticky;
+  top: 0;
+  z-index: 150;
+  background: linear-gradient(90deg, #111 0%, #1a1a1a 50%, #111 100%);
+  border-bottom: 1px solid #333;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.countdown-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #ffd500;
+}
+
+.countdown-time {
+  display: flex;
+  gap: 12px;
+}
+
+.countdown-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 42px;
+}
+
+.countdown-number {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.countdown-unit {
+  font-size: 10px;
+  color: #9a9a9a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
