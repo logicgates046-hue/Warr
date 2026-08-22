@@ -1,5 +1,6 @@
 import { Archivo_Black, Inter } from 'next/font/google';
 import './globals.css';
+import LiveTicker from '@/components/LiveTicker';
 
 const archivoBlack = Archivo_Black({
   weight: '400',
@@ -21,12 +22,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${archivoBlack.variable} ${inter.variable}`}>
       <body>
-        <div className="ticker-wrap">
-          <div className="ticker">
-            🔴 LIVE — WANTAM votes counting · TUTAM votes counting · Join the movement · Which are you in? &nbsp;&nbsp;&nbsp;&nbsp;
-            🔴 LIVE — WANTAM votes counting · TUTAM votes counting · Join the movement · Which are you in? &nbsp;&nbsp;&nbsp;&nbsp;
-          </div>
-        </div>
+        <LiveTicker />
         {children}
       </body>
     </html>
