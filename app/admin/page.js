@@ -22,25 +22,16 @@ export default function AdminPage() {
         return;
       }
 
-      // ===== DEBUG VERSION =====
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('is_admin')
         .eq('id', authData.user.id)
         .single();
 
-      console.log('User ID:', authData.user.id);
-      console.log('Profile:', profile);
-      console.log('Profile Error:', profileError);
-
       if (!profile?.is_admin) {
-        alert(
-          `Not recognized as admin.\n\nProfile: ${JSON.stringify(profile)}\nError: ${profileError?.message || 'None'}`
-        );
         router.push('/battle');
         return;
       }
-      // ===== END DEBUG =====
 
       setIsAdmin(true);
 
@@ -86,12 +77,16 @@ export default function AdminPage() {
         .order('vote_count', { ascending: false });
 
       setCandidatureResults(tickets || []);
-
       setLoading(false);
     };
 
     load();
   }, [router]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
 
   if (loading) {
     return (
@@ -116,6 +111,25 @@ export default function AdminPage() {
           <a href="/admin/settings" className="admin-nav-item">Settings</a>
           <a href="/admin/users" className="admin-nav-item">Users</a>
         </div>
+
+        {/* LOGOUT BUTTON */}
+        <button
+          onClick={handleLogout}
+          style={{
+            background: '#bb0000',
+            color: 'white',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '600',
+            marginBottom: '24px',
+            cursor: 'pointer',
+            width: '100%',
+          }}
+        >
+          LOGOUT
+        </button>
 
         <h2 className="profile-section-title">OVERVIEW</h2>
         <div className="profile-card">
@@ -159,4 +173,4 @@ export default function AdminPage() {
       </section>
     </main>
   );
-    }
+            }
