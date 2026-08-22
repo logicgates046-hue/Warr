@@ -9,32 +9,27 @@ import { supabase } from '@/lib/supabase';
 export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [debugInfo, setDebugInfo] = useState('');
   const [stats, setStats] = useState(null);
   const [candidatureResults, setCandidatureResults] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
     const load = async () => {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const { data: authData } = await supabase.auth.getUser();
 
       if (!authData.user) {
         router.push('/login');
         return;
       }
 
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
-        .select('is_admin, email')
+        .select('is_admin')
         .eq('id', authData.user.id)
         .single();
 
-      setDebugInfo(
-        `User ID: ${authData.user.id} | Email: ${authData.user.email} | Profile: ${JSON.stringify(profile)} | Error: ${profileError ? profileError.message : 'none'}`
-      );
-
       if (!profile?.is_admin) {
-        setLoading(false);
+        router.push('/battle');
         return;
       }
 
@@ -97,13 +92,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!isAdmin) {
-    return (
-      <main className="home">
-        <p className="auth-error" style={{ padding: '20px', wordBreak: 'break-all' }}>{debugInfo}</p>
-      </main>
-    );
-  }
+  if (!isAdmin) return null;
 
   return (
     <main className="home">
