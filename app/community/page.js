@@ -6,15 +6,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import BottomNav from '@/components/BottomNav';
 
-const WHATSAPP_LINKS = {
-  WANTAM: 'https://chat.whatsapp.com/KgFPeGjFM4OJYbmWlWHrFU?s=cl&p=a&ilr=4',
-  TUTAM: 'https://chat.whatsapp.com/I7Fz4EbL2s0Cbfs5vPBMp4?s=cl&p=a&ilr=4',
-};
-
 export default function CommunityPage() {
   const [userId, setUserId] = useState(null);
   const [side, setSide] = useState(null);
   const [joined, setJoined] = useState(false);
+  const [links, setLinks] = useState({ WANTAM: '', TUTAM: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -37,6 +33,16 @@ export default function CommunityPage() {
 
       setSide(profile?.side || null);
       setJoined(!!profile?.joined_community);
+
+      const { data: settings } = await supabase.from('settings').select('*');
+      const wantam = settings?.find((s) => s.key === 'whatsapp_wantam');
+      const tutam = settings?.find((s) => s.key === 'whatsapp_tutam');
+
+      setLinks({
+        WANTAM: wantam?.value || '',
+        TUTAM: tutam?.value || '',
+      });
+
       setLoading(false);
     };
 
@@ -58,7 +64,7 @@ export default function CommunityPage() {
     }
 
     setJoined(true);
-    window.open(WHATSAPP_LINKS[side], '_blank');
+    window.open(links[side], '_blank');
   };
 
   if (loading) {
