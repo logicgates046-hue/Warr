@@ -21,6 +21,22 @@ export default function CandidaturePage() {
   const [error, setError] = useState('');
   const [showInfo, setShowInfo] = useState(false);
 
+  const refreshTickets = async () => {
+    const { data: wantamData } = await supabase
+      .from('tickets')
+      .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
+      .eq('side', 'WANTAM');
+
+    const { data: tutamData } = await supabase
+      .from('tickets')
+      .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
+      .eq('side', 'TUTAM');
+
+    setWantamTickets(wantamData || []);
+    setTutamTickets(tutamData || []);
+    return { wantamData, tutamData };
+  };
+
   useEffect(() => {
     const load = async () => {
       const { data: authData } = await supabase.auth.getUser();
@@ -41,18 +57,7 @@ export default function CandidaturePage() {
       const userSide = profile?.side || null;
       setSide(userSide);
 
-      const { data: wantamData } = await supabase
-        .from('tickets')
-        .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
-        .eq('side', 'WANTAM');
-
-      const { data: tutamData } = await supabase
-        .from('tickets')
-        .select(`id, vote_count, president:president_id ( name, photo_url ), deputy:deputy_id ( name, photo_url )`)
-        .eq('side', 'TUTAM');
-
-      setWantamTickets(wantamData || []);
-      setTutamTickets(tutamData || []);
+      const { wantamData, tutamData } = await refreshTickets();
 
       if (userSide) {
         setSideTickets(userSide === 'WANTAM' ? (wantamData || []) : (tutamData || []));
@@ -98,6 +103,12 @@ export default function CandidaturePage() {
       setError(profileUpdateError.message);
       setVoting(false);
       return;
+    }
+
+    // Refresh tickets so the new vote count shows immediately
+    const { wantamData, tutamData } = await refreshTickets();
+    if (side) {
+      setSideTickets(side === 'WANTAM' ? (wantamData || []) : (tutamData || []));
     }
 
     setExistingVote(ticketId);
@@ -146,6 +157,7 @@ export default function CandidaturePage() {
           </div>
         </div>
       </div>
+      <p className="vote-count-reveal">{ticket.vote_count} votes</p>
       {onVote && (
         <button
           className="vote-ticket-button"
@@ -224,7 +236,7 @@ export default function CandidaturePage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setShowInfo(false)}>×</button>
             <h2>Candidature Guide</h2>
-            <p>Each card shows one President + Deputy President ticket at a time.</p>
+            <p>Each card shows one President + Deputy President ticket at a time, along with how many votes it has.</p>
             <p>Tap Shuffle to browse other tickets — anytime, even after voting.</p>
             <p>You must vote in Battle first before you can vote here.</p>
             <button className="modal-button" onClick={() => setShowInfo(false)}>GOT IT</button>
@@ -235,4 +247,4 @@ export default function CandidaturePage() {
       <BottomNav />
     </main>
   );
-          }
+              }
