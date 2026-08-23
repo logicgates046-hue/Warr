@@ -16,6 +16,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
+    // 1. Sign in
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -27,30 +28,31 @@ export default function LoginPage() {
       return;
     }
 
-    // Get profile including is_admin
+    const userId = data.user.id;
+
+    // 2. Get the profile and check if admin
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('county, is_admin')
-      .eq('id', data.user.id)
+      .eq('id', userId)
       .single();
 
     setLoading(false);
 
     if (profileError) {
-      setError(profileError.message);
+      setError('Could not load profile: ' + profileError.message);
       return;
     }
 
-    // If user is admin → go to admin panel
+    // 3. Decision
     if (profile?.is_admin === true) {
+      // Admin → go straight to Admin Panel
       router.push('/admin');
-      return;
-    }
-
-    // Normal users
-    if (!profile?.county) {
+    } else if (!profile?.county) {
+      // Normal user who hasn't completed profile
       router.push('/complete-profile');
     } else {
+      // Normal user
       router.push('/battle');
     }
   };
