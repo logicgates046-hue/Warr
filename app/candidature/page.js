@@ -84,6 +84,7 @@ export default function CandidaturePage() {
     setVoting(true);
     setError('');
 
+    // 1. Insert the vote
     const { error: voteError } = await supabase
       .from('candidature_votes')
       .insert({ user_id: userId, ticket_id: ticketId });
@@ -94,6 +95,27 @@ export default function CandidaturePage() {
       return;
     }
 
+    // 2. Increase the vote_count on the ticket (THIS WAS MISSING)
+    const { data: currentTicket } = await supabase
+      .from('tickets')
+      .select('vote_count')
+      .eq('id', ticketId)
+      .single();
+
+    const newCount = (currentTicket?.vote_count || 0) + 1;
+
+    const { error: countError } = await supabase
+      .from('tickets')
+      .update({ vote_count: newCount })
+      .eq('id', ticketId);
+
+    if (countError) {
+      setError(countError.message);
+      setVoting(false);
+      return;
+    }
+
+    // 3. Update profile
     const { error: profileUpdateError } = await supabase
       .from('profiles')
       .update({ candidature_ticket_id: ticketId })
@@ -105,6 +127,7 @@ export default function CandidaturePage() {
       return;
     }
 
+    // 4. Refresh the list so the new count appears
     const { wantamData, tutamData } = await refreshTickets();
     if (side) {
       setSideTickets(side === 'WANTAM' ? (wantamData || []) : (tutamData || []));
@@ -156,7 +179,7 @@ export default function CandidaturePage() {
           </div>
         </div>
       </div>
-      <p className="vote-count-reveal">{ticket.vote_count} votes</p>
+      <p className="vote-count-reveal">{ticket.vote_count || 0} votes</p>
       {onVote && (
         <button
           className="vote-ticket-button"
@@ -246,4 +269,4 @@ export default function CandidaturePage() {
       <BottomNav />
     </main>
   );
-              }
+                }
