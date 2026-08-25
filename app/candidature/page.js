@@ -84,7 +84,6 @@ export default function CandidaturePage() {
     setVoting(true);
     setError('');
 
-    // 1. Insert the vote
     const { error: voteError } = await supabase
       .from('candidature_votes')
       .insert({ user_id: userId, ticket_id: ticketId });
@@ -95,27 +94,6 @@ export default function CandidaturePage() {
       return;
     }
 
-    // 2. Increase the vote_count on the ticket (THIS WAS MISSING)
-    const { data: currentTicket } = await supabase
-      .from('tickets')
-      .select('vote_count')
-      .eq('id', ticketId)
-      .single();
-
-    const newCount = (currentTicket?.vote_count || 0) + 1;
-
-    const { error: countError } = await supabase
-      .from('tickets')
-      .update({ vote_count: newCount })
-      .eq('id', ticketId);
-
-    if (countError) {
-      setError(countError.message);
-      setVoting(false);
-      return;
-    }
-
-    // 3. Update profile
     const { error: profileUpdateError } = await supabase
       .from('profiles')
       .update({ candidature_ticket_id: ticketId })
@@ -127,7 +105,6 @@ export default function CandidaturePage() {
       return;
     }
 
-    // 4. Refresh the list so the new count appears
     const { wantamData, tutamData } = await refreshTickets();
     if (side) {
       setSideTickets(side === 'WANTAM' ? (wantamData || []) : (tutamData || []));
@@ -165,21 +142,35 @@ export default function CandidaturePage() {
       <span className="side-label">{sideKey}</span>
       <div className="ticket-people">
         <div className="ticket-person">
-          <img src={ticket.president.photo_url} alt={ticket.president.name} />
+          <img
+            src={ticket.president?.photo_url || '/placeholder-avatar.png'}
+            alt={ticket.president?.name || 'President'}
+            loading="lazy"
+            decoding="async"
+            width={80}
+            height={80}
+          />
           <div>
             <span className="ticket-role">PRESIDENT</span>
-            <span className="ticket-name">{ticket.president.name}</span>
+            <span className="ticket-name">{ticket.president?.name}</span>
           </div>
         </div>
         <div className="ticket-person">
-          <img src={ticket.deputy.photo_url} alt={ticket.deputy.name} />
+          <img
+            src={ticket.deputy?.photo_url || '/placeholder-avatar.png'}
+            alt={ticket.deputy?.name || 'Deputy'}
+            loading="lazy"
+            decoding="async"
+            width={80}
+            height={80}
+          />
           <div>
             <span className="ticket-role">DEPUTY PRESIDENT</span>
-            <span className="ticket-name">{ticket.deputy.name}</span>
+            <span className="ticket-name">{ticket.deputy?.name}</span>
           </div>
         </div>
       </div>
-      <p className="vote-count-reveal">{ticket.vote_count || 0} votes</p>
+      <p className="vote-count-reveal">{ticket.vote_count} votes</p>
       {onVote && (
         <button
           className="vote-ticket-button"
@@ -269,4 +260,4 @@ export default function CandidaturePage() {
       <BottomNav />
     </main>
   );
-                }
+              }
