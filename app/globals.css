@@ -695,3 +695,25 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+/* Faster & cleaner candidate photos */
+.ticket-person img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #1a1a1a;
+  flex-shrink: 0;
+  display: block;
+}
+
+.ticket-people {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ticket-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
