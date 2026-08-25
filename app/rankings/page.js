@@ -81,7 +81,10 @@ export default function RankingsPage() {
       return;
     }
 
-    const { error: profileError } = await supabase.from('profiles').update({ rankings_vote: side }).eq('id', userId);
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ rankings_vote: side })
+      .eq('id', userId);
 
     if (profileError) {
       setError(profileError.message);
@@ -108,17 +111,31 @@ export default function RankingsPage() {
       <span className="side-label">MOST CHOSEN — {sideKey}</span>
       <div className="ticket-people">
         <div className="ticket-person">
-          <img src={ticket.president.photo_url} alt={ticket.president.name} />
+          <img
+            src={ticket.president?.photo_url || '/placeholder-avatar.png'}
+            alt={ticket.president?.name || 'President'}
+            loading="lazy"
+            decoding="async"
+            width={80}
+            height={80}
+          />
           <div>
             <span className="ticket-role">PRESIDENT</span>
-            <span className="ticket-name">{ticket.president.name}</span>
+            <span className="ticket-name">{ticket.president?.name}</span>
           </div>
         </div>
         <div className="ticket-person">
-          <img src={ticket.deputy.photo_url} alt={ticket.deputy.name} />
+          <img
+            src={ticket.deputy?.photo_url || '/placeholder-avatar.png'}
+            alt={ticket.deputy?.name || 'Deputy'}
+            loading="lazy"
+            decoding="async"
+            width={80}
+            height={80}
+          />
           <div>
             <span className="ticket-role">DEPUTY PRESIDENT</span>
-            <span className="ticket-name">{ticket.deputy.name}</span>
+            <span className="ticket-name">{ticket.deputy?.name}</span>
           </div>
         </div>
       </div>
