@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import BottomNav from '@/components/BottomNav';
@@ -12,6 +12,7 @@ export default function ProfilePage() {
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const canvasRef = useRef(null);
 
   useEffect(() => {
     const load = async () => {
@@ -51,6 +52,157 @@ export default function ProfilePage() {
     router.push('/login');
   };
 
+  // ========== LANDSCAPE CARD WITH EDGES ==========
+  const generateShareCard = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || !profile?.side || !ticket) return null;
+
+    const ctx = canvas.getContext('2d');
+    const W = 1200;
+    const H = 675;
+    canvas.width = W;
+    canvas.height = H;
+
+    const isWantam = profile.side === 'WANTAM';
+    const accent = isWantam ? '#00e676' : '#ffea00';
+
+    // Black background
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, W, H);
+
+    // Card area
+    const cardX = 60;
+    const cardY = 40;
+    const cardW = W - 120;
+    const cardH = H - 80;
+    const radius = 24;
+
+    // Soft glow
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 40;
+    ctx.fillStyle = '#0d0d0d';
+    roundRect(ctx, cardX, cardY, cardW, cardH, radius);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Card body
+    ctx.fillStyle = '#111111';
+    roundRect(ctx, cardX, cardY, cardW, cardH, radius);
+    ctx.fill();
+
+    // Neon border
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 3;
+    roundRect(ctx, cardX, cardY, cardW, cardH, radius);
+    ctx.stroke();
+
+    const left = cardX + 50;
+    let y = cardY + 55;
+
+    // KE-WAR
+    ctx.fillStyle = '#888888';
+    ctx.font = '600 22px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('KE-WAR', left, y);
+
+    y += 55;
+
+    // Name
+    ctx.fillStyle = '#777777';
+    ctx.font = '500 18px Arial';
+    ctx.fillText('Name:', left, y);
+    y += 32;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '600 28px Arial';
+    ctx.fillText(profile.full_name || 'Kenyan Citizen', left, y);
+
+    y += 50;
+
+    // Position
+    ctx.fillStyle = '#777777';
+    ctx.font = '500 18px Arial';
+    ctx.fillText('Position:', left, y);
+    y += 32;
+    ctx.fillStyle = accent;
+    ctx.font = '700 32px Arial';
+    ctx.fillText(profile.side, left, y);
+
+    y += 50;
+
+    // Preferred candidature
+    ctx.fillStyle = '#777777';
+    ctx.font = '500 18px Arial';
+    ctx.fillText('Preferred candidature:', left, y);
+    y += 32;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '600 26px Arial';
+    const ticketText = `${ticket.president?.name || '—'} & ${ticket.deputy?.name || '—'}`;
+    ctx.fillText(ticketText, left, y);
+
+    y += 50;
+
+    // Ke-war ID
+    ctx.fillStyle = '#777777';
+    ctx.font = '500 18px Arial';
+    ctx.fillText('Ke-war ID:', left, y);
+    y += 32;
+    ctx.fillStyle = accent;
+    ctx.font = '600 22px monospace';
+    ctx.fillText(profile.ke_war_number || `ke-war-${profile.id?.slice(0, 8)}`, left, y);
+
+    // war.ke
+    ctx.fillStyle = '#555555';
+    ctx.font = '500 18px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText('war.ke', cardX + cardW - 50, cardY + cardH - 30);
+
+    return canvas.toDataURL('image/png');
+  };
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  const handleShare = async () => {
+    const dataUrl = generateShareCard();
+    if (!dataUrl) return;
+
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], `ke-war-${profile.side?.toLowerCase()}-card.png`, {
+      type: 'image/png',
+    });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          title: `I'm ${profile.side} on KE-WAR`,
+          text: `Name: ${profile.full_name}\nPosition: ${profile.side}\nPreferred candidature: ${ticket?.president?.name} & ${ticket?.deputy?.name}\nKe-war ID: ${profile.ke_war_number}`,
+          files: [file],
+        });
+        return;
+      } catch (err) {
+        // user cancelled
+      }
+    }
+
+    // Fallback download
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = `ke-war-${profile.side?.toLowerCase()}-card.png`;
+    link.click();
+  };
+
   if (loading) {
     return (
       <main className="home">
@@ -58,6 +210,8 @@ export default function ProfilePage() {
       </main>
     );
   }
+
+  const canShare = profile?.side && ticket;
 
   return (
     <main className="home">
@@ -96,7 +250,7 @@ export default function ProfilePage() {
           <div className="profile-row">
             <span className="profile-label">CANDIDATURE TICKET</span>
             <span className="profile-value">
-              {ticket ? `${ticket.president.name} / ${ticket.deputy.name}` : 'Not voted yet'}
+              {ticket ? `${ticket.president?.name} / ${ticket.deputy?.name}` : 'Not voted yet'}
             </span>
           </div>
           <div className="profile-row">
@@ -109,8 +263,23 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* SHARE BUTTON – only shows if they have side + ticket */}
+        {canShare && (
+          <button className="share-button" onClick={handleShare} style={{ marginTop: 24, marginBottom: 16 }}>
+            SHARE YOUR KE-WAR CARD
+          </button>
+        )}
+
+        {!canShare && (
+          <p style={{ color: '#666', fontSize: 14, marginTop: 20, textAlign: 'center' }}>
+            Vote in Battle + Candidature to unlock your shareable KE-WAR card
+          </p>
+        )}
+
         <button onClick={handleLogout} className="logout-button">LOGOUT</button>
       </section>
+
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
 
       <BottomNav />
     </main>
