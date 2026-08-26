@@ -52,7 +52,7 @@ export default function ProfilePage() {
     router.push('/login');
   };
 
-  // ========== LANDSCAPE CARD WITH EDGES ==========
+  // ========== TIGHT CARD – bigger fonts, less empty space ==========
   const generateShareCard = () => {
     const canvas = canvasRef.current;
     if (!canvas || !profile?.side || !ticket) return null;
@@ -66,20 +66,20 @@ export default function ProfilePage() {
     const isWantam = profile.side === 'WANTAM';
     const accent = isWantam ? '#00e676' : '#ffea00';
 
-    // Black background
+    // Full black background
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, W, H);
 
-    // Card area
-    const cardX = 60;
-    const cardY = 40;
-    const cardW = W - 120;
-    const cardH = H - 80;
-    const radius = 24;
+    // Card (almost fills the canvas)
+    const cardX = 30;
+    const cardY = 25;
+    const cardW = W - 60;
+    const cardH = H - 50;
+    const radius = 18;
 
     // Soft glow
     ctx.shadowColor = accent;
-    ctx.shadowBlur = 40;
+    ctx.shadowBlur = 25;
     ctx.fillStyle = '#0d0d0d';
     roundRect(ctx, cardX, cardY, cardW, cardH, radius);
     ctx.fill();
@@ -92,69 +92,69 @@ export default function ProfilePage() {
 
     // Neon border
     ctx.strokeStyle = accent;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 4;
     roundRect(ctx, cardX, cardY, cardW, cardH, radius);
     ctx.stroke();
 
-    const left = cardX + 50;
-    let y = cardY + 55;
+    const left = cardX + 45;
+    let y = cardY + 42;
 
     // KE-WAR
-    ctx.fillStyle = '#888888';
-    ctx.font = '600 22px Arial';
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '700 28px Arial';
     ctx.textAlign = 'left';
     ctx.fillText('KE-WAR', left, y);
 
-    y += 55;
+    y += 48;
 
     // Name
-    ctx.fillStyle = '#777777';
-    ctx.font = '500 18px Arial';
+    ctx.fillStyle = '#999999';
+    ctx.font = '600 22px Arial';
     ctx.fillText('Name:', left, y);
-    y += 32;
+    y += 34;
     ctx.fillStyle = '#ffffff';
-    ctx.font = '600 28px Arial';
+    ctx.font = '700 40px Arial';
     ctx.fillText(profile.full_name || 'Kenyan Citizen', left, y);
 
-    y += 50;
+    y += 52;
 
     // Position
-    ctx.fillStyle = '#777777';
-    ctx.font = '500 18px Arial';
+    ctx.fillStyle = '#999999';
+    ctx.font = '600 22px Arial';
     ctx.fillText('Position:', left, y);
-    y += 32;
+    y += 36;
     ctx.fillStyle = accent;
-    ctx.font = '700 32px Arial';
+    ctx.font = '800 46px Arial';
     ctx.fillText(profile.side, left, y);
 
-    y += 50;
+    y += 52;
 
     // Preferred candidature
-    ctx.fillStyle = '#777777';
-    ctx.font = '500 18px Arial';
+    ctx.fillStyle = '#999999';
+    ctx.font = '600 22px Arial';
     ctx.fillText('Preferred candidature:', left, y);
-    y += 32;
+    y += 34;
     ctx.fillStyle = '#ffffff';
-    ctx.font = '600 26px Arial';
+    ctx.font = '700 34px Arial';
     const ticketText = `${ticket.president?.name || '—'} & ${ticket.deputy?.name || '—'}`;
     ctx.fillText(ticketText, left, y);
 
-    y += 50;
+    y += 52;
 
     // Ke-war ID
-    ctx.fillStyle = '#777777';
-    ctx.font = '500 18px Arial';
+    ctx.fillStyle = '#999999';
+    ctx.font = '600 22px Arial';
     ctx.fillText('Ke-war ID:', left, y);
-    y += 32;
+    y += 34;
     ctx.fillStyle = accent;
-    ctx.font = '600 22px monospace';
+    ctx.font = '700 30px monospace';
     ctx.fillText(profile.ke_war_number || `ke-war-${profile.id?.slice(0, 8)}`, left, y);
 
     // war.ke
-    ctx.fillStyle = '#555555';
-    ctx.font = '500 18px Arial';
+    ctx.fillStyle = '#777777';
+    ctx.font = '600 22px Arial';
     ctx.textAlign = 'right';
-    ctx.fillText('war.ke', cardX + cardW - 50, cardY + cardH - 30);
+    ctx.fillText('war.ke', cardX + cardW - 45, cardY + cardH - 28);
 
     return canvas.toDataURL('image/png');
   };
@@ -259,24 +259,38 @@ export default function ProfilePage() {
           </div>
           <div className="profile-row">
             <span className="profile-label">COMMUNITY GROUP</span>
-            <span className="profile-value">{profile?.joined_community ? 'Joined' : 'Not joined yet'}</span>
+            <span className="profile-value">
+              {profile?.joined_community ? 'Joined' : 'Not joined yet'}
+            </span>
           </div>
         </div>
 
-        {/* SHARE BUTTON – only shows if they have side + ticket */}
         {canShare && (
-          <button className="share-button" onClick={handleShare} style={{ marginTop: 24, marginBottom: 16 }}>
+          <button
+            className="share-button"
+            onClick={handleShare}
+            style={{ marginTop: 24, marginBottom: 16 }}
+          >
             SHARE YOUR KE-WAR CARD
           </button>
         )}
 
         {!canShare && (
-          <p style={{ color: '#666', fontSize: 14, marginTop: 20, textAlign: 'center' }}>
+          <p
+            style={{
+              color: '#666',
+              fontSize: 14,
+              marginTop: 20,
+              textAlign: 'center',
+            }}
+          >
             Vote in Battle + Candidature to unlock your shareable KE-WAR card
           </p>
         )}
 
-        <button onClick={handleLogout} className="logout-button">LOGOUT</button>
+        <button onClick={handleLogout} className="logout-button">
+          LOGOUT
+        </button>
       </section>
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
@@ -284,4 +298,4 @@ export default function ProfilePage() {
       <BottomNav />
     </main>
   );
-    }
+              }
