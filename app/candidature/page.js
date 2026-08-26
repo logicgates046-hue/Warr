@@ -2,12 +2,14 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import BottomNav from '@/components/BottomNav';
 
 export default function CandidaturePage() {
   const [userId, setUserId] = useState(null);
+  const [fullName, setFullName] = useState('');
+  const [keWarId, setKeWarId] = useState('');
   const [side, setSide] = useState(null);
   const [wantamTickets, setWantamTickets] = useState([]);
   const [tutamTickets, setTutamTickets] = useState([]);
@@ -16,10 +18,12 @@ export default function CandidaturePage() {
   const [sideTickets, setSideTickets] = useState([]);
   const [ticketIndex, setTicketIndex] = useState(0);
   const [existingVote, setExistingVote] = useState(null);
+  const [selectedTicket, setSelectedTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
   const [error, setError] = useState('');
   const [showInfo, setShowInfo] = useState(false);
+  const canvasRef = useRef(null);
 
   const refreshTickets = async () => {
     const [{ data: wantamData }, { data: tutamData }] = await Promise.all([
@@ -50,26 +54,29 @@ export default function CandidaturePage() {
       setUserId(authData.user.id);
 
       const [{ data: profile }, ticketResult] = await Promise.all([
-        supabase.from('profiles').select('side').eq('id', authData.user.id).single(),
+        supabase
+          .from('profiles')
+          .select('side, candidature_ticket_id, full_name, ke_war_number')
+          .eq('id', authData.user.id)
+          .single(),
         refreshTickets(),
       ]);
 
       const userSide = profile?.side || null;
       setSide(userSide);
+      setFullName(profile?.full_name || 'Kenyan Citizen');
+      setKeWarId(profile?.ke_war_number || `ke-war-${authData.user.id.slice(0, 8)}`);
 
       const { wantamData, tutamData } = ticketResult;
 
       if (userSide) {
-        setSideTickets(userSide === 'WANTAM' ? (wantamData || []) : (tutamData || []));
+        const tickets = userSide === 'WANTAM' ? (wantamData || []) : (tutamData || []);
+        setSideTickets(tickets);
 
-        const { data: voteData } = await supabase
-          .from('candidature_votes')
-          .select('ticket_id')
-          .eq('user_id', authData.user.id)
-          .single();
-
-        if (voteData) {
-          setExistingVote(voteData.ticket_id);
+        if (profile?.candidature_ticket_id) {
+          setExistingVote(profile.candidature_ticket_id);
+          const found = tickets.find((t) => t.id === profile.candidature_ticket_id);
+          if (found) setSelectedTicket(found);
         }
       }
 
@@ -106,10 +113,11 @@ export default function CandidaturePage() {
     }
 
     const { wantamData, tutamData } = await refreshTickets();
-    if (side) {
-      setSideTickets(side === 'WANTAM' ? (wantamData || []) : (tutamData || []));
-    }
+    const tickets = side === 'WANTAM' ? (wantamData || []) : (tutamData || []);
+    setSideTickets(tickets);
 
+    const found = tickets.find((t) => t.id === ticketId);
+    setSelectedTicket(found || null);
     setExistingVote(ticketId);
     setVoting(false);
   };
@@ -127,6 +135,162 @@ export default function CandidaturePage() {
   const shuffleSideTicket = () => {
     if (sideTickets.length < 2) return;
     setTicketIndex((prev) => (prev + 1) % sideTickets.length);
+  };
+
+  // ========== LANDSCAPE CARD WITH EDGES ==========
+  const generateShareCard = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || !side || !selectedTicket) return null;
+
+    const ctx = canvas.getContext('2d');
+    const W = 1200; // landscape width
+    const H = 675;  // landscape height
+    canvas.width = W;
+    canvas.height = H;
+
+    const isWantam = side === 'WANTAM';
+    const accent = isWantam ? '#00e676' : '#ffea00';
+    const accentSoft = isWantam ? 'rgba(0, 230, 118, 0.35)' : 'rgba(255, 234, 0, 0.35)';
+
+    // Full black background
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, W, H);
+
+    // Card dimensions (with margins so it looks like a floating card)
+    const cardX = 60;
+    const cardY = 40;
+    const cardW = W - 120;
+    const cardH = H - 80;
+    const radius = 24;
+
+    // Soft glow behind card
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 40;
+    ctx.fillStyle = '#0d0d0d';
+    roundRect(ctx, cardX, cardY, cardW, cardH, radius);
+    ctx.fill();
+
+    // Reset shadow
+    ctx.shadowBlur = 0;
+
+    // Card body
+    ctx.fillStyle = '#111111';
+    roundRect(ctx, cardX, cardY, cardW, cardH, radius);
+    ctx.fill();
+
+    // Neon border
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 3;
+    roundRect(ctx, cardX, cardY, cardW, cardH, radius);
+    ctx.stroke();
+
+    // Inner content
+    const left = cardX + 50;
+    let y = cardY + 55;
+
+    // KE-WAR
+    ctx.fillStyle = '#888888';
+    ctx.font = '600 22px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('KE-WAR', left, y);
+
+    y += 55;
+
+    // Name
+    ctx.fillStyle = '#777777';
+    ctx.font = '500 18px Arial';
+    ctx.fillText('Name:', left, y);
+    y += 32;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '600 28px Arial';
+    ctx.fillText(fullName || 'Kenyan Citizen', left, y);
+
+    y += 50;
+
+    // Position
+    ctx.fillStyle = '#777777';
+    ctx.font = '500 18px Arial';
+    ctx.fillText('Position:', left, y);
+    y += 32;
+    ctx.fillStyle = accent;
+    ctx.font = '700 32px Arial';
+    ctx.fillText(side, left, y);
+
+    y += 50;
+
+    // Preferred candidature
+    ctx.fillStyle = '#777777';
+    ctx.font = '500 18px Arial';
+    ctx.fillText('Preferred candidature:', left, y);
+    y += 32;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '600 26px Arial';
+    const ticketText = `${selectedTicket.president?.name || '—'} & ${selectedTicket.deputy?.name || '—'}`;
+    ctx.fillText(ticketText, left, y);
+
+    y += 50;
+
+    // Ke-war ID
+    ctx.fillStyle = '#777777';
+    ctx.font = '500 18px Arial';
+    ctx.fillText('Ke-war ID:', left, y);
+    y += 32;
+    ctx.fillStyle = accent;
+    ctx.font = '600 22px monospace';
+    ctx.fillText(keWarId, left, y);
+
+    // war.ke at bottom of card
+    ctx.fillStyle = '#555555';
+    ctx.font = '500 18px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText('war.ke', cardX + cardW - 50, cardY + cardH - 30);
+
+    return canvas.toDataURL('image/png');
+  };
+
+  // Helper: rounded rectangle
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  const handleShare = async () => {
+    const dataUrl = generateShareCard();
+    if (!dataUrl) return;
+
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], `ke-war-${side?.toLowerCase()}-card.png`, {
+      type: 'image/png',
+    });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          title: `I'm ${side} on KE-WAR`,
+          text: `Name: ${fullName}\nPosition: ${side}\nPreferred candidature: ${selectedTicket?.president?.name} & ${selectedTicket?.deputy?.name}\nKe-war ID: ${keWarId}`,
+          files: [file],
+        });
+        return;
+      } catch (err) {
+        // user cancelled
+      }
+    }
+
+    // Fallback: download
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = `ke-war-${side?.toLowerCase()}-card.png`;
+    link.click();
   };
 
   if (loading) {
@@ -193,7 +357,34 @@ export default function CandidaturePage() {
           <button className="info-icon" onClick={() => setShowInfo(true)}>i</button>
         </div>
 
-        {!side ? (
+        {/* AFTER VOTING – SHARE CARD */}
+        {existingVote && selectedTicket ? (
+          <div className="share-moment">
+            <p className="share-label">YOUR POSITION IS LOCKED</p>
+            <h2 className={`share-side ${side?.toLowerCase()}`}>
+              {side} {side === 'WANTAM' ? '🟢' : '🟡'}
+            </h2>
+
+            <div className="share-ticket-preview">
+              <p className="share-ticket-label">YOUR TICKET</p>
+              <p className="share-ticket-names">
+                {selectedTicket.president?.name} <span>&</span> {selectedTicket.deputy?.name}
+              </p>
+            </div>
+
+            <button className="share-button" onClick={handleShare}>
+              SHARE YOUR KE-WAR CARD
+            </button>
+
+            <p className="share-hint">
+              Creates a premium landscape card for WhatsApp, Instagram, TikTok & X
+            </p>
+
+            <a href="/rankings" className="enter-button" style={{ marginTop: 28 }}>
+              CONTINUE TO RANKINGS
+            </a>
+          </div>
+        ) : !side ? (
           <>
             <p className="intro">
               You haven't voted in Battle yet. Browse both sides' tickets below —
@@ -219,9 +410,7 @@ export default function CandidaturePage() {
         ) : (
           <>
             <p className="intro">
-              {existingVote
-                ? `You have selected your preferred ticket for ${side}. Feel free to keep browsing.`
-                : `Choose your preferred presidential ticket for ${side}.`}
+              Choose your preferred presidential ticket for {side}.
             </p>
 
             {sideTickets[ticketIndex] && (
@@ -233,24 +422,24 @@ export default function CandidaturePage() {
               />
             )}
 
-            <button onClick={shuffleSideTicket} className="shuffle-button">SHUFFLE TICKET</button>
-
-            {existingVote && (
-              <a href="/rankings" className="enter-button">CONTINUE TO RANKINGS</a>
-            )}
+            <button onClick={shuffleSideTicket} className="shuffle-button">
+              SHUFFLE TICKET
+            </button>
           </>
         )}
 
         {error && <p className="auth-error">{error}</p>}
       </section>
 
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+
       {showInfo && (
         <div className="modal-overlay" onClick={() => setShowInfo(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setShowInfo(false)}>×</button>
             <h2>Candidature Guide</h2>
-            <p>Each card shows one President + Deputy President ticket at a time, along with how many votes it has.</p>
-            <p>Tap Shuffle to browse other tickets — anytime, even after voting.</p>
+            <p>Each card shows one President + Deputy President ticket at a time.</p>
+            <p>Tap Shuffle to browse other tickets.</p>
             <p>You must vote in Battle first before you can vote here.</p>
             <button className="modal-button" onClick={() => setShowInfo(false)}>GOT IT</button>
           </div>
@@ -260,4 +449,4 @@ export default function CandidaturePage() {
       <BottomNav />
     </main>
   );
-              }
+      }
